@@ -3,14 +3,13 @@ package notification.service.yowyob.inc.notification.application.port.input.dto;
 import lombok.Data;
 import notification.service.yowyob.inc.notification.application.domain.enums.NotificationType;
 
+import java.util.Map;
+import java.util.UUID;
+
 @Data
-public class TemplateCreateRequest {
+public class NotificationCreateRequest {
+  private NotificationType notificationType;
   private int templateId;
-  private String fromEmail;
-  private String name;
-  private String description;
-  private String message;
-  private String subject;
-  private String bodyHtml;
-  NotificationType type;
+  private UUID userId;
+  private Map<String, String> data;
 }

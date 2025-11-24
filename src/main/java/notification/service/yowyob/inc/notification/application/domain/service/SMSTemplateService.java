@@ -1,6 +1,7 @@
 package notification.service.yowyob.inc.notification.application.domain.service;
 
 import lombok.AllArgsConstructor;
+import notification.service.yowyob.inc.notification.application.domain.model.ServiceApp;
 import notification.service.yowyob.inc.notification.application.domain.model.SMSTemplate;
 import notification.service.yowyob.inc.notification.application.domain.repository.SMSTemplateRepository;
 import notification.service.yowyob.inc.notification.application.port.input.dto.TemplateCreateRequest;
@@ -9,13 +10,14 @@ import notification.service.yowyob.inc.notification.application.port.input.dto.T
 public class SMSTemplateService {
   private SMSTemplateRepository smsTemplateRepository;
 
-  public SMSTemplate createSMSTemplate(TemplateCreateRequest request) {
+  public SMSTemplate createSMSTemplate(TemplateCreateRequest request, ServiceApp serviceApp) {
     SMSTemplate template = new SMSTemplate();
 
     template.setName(request.getName());
     template.setDescription(request.getDescription());
-    ((SMSTemplate) template).setMessage(request.getMessage());
+    template.setMessage(request.getMessage());
+    template.setServiceAppId(serviceApp.getServiceId());
 
-    return this.smsTemplateRepository.save((SMSTemplate) template);
+    return this.smsTemplateRepository.save(template);
   }
 }

@@ -8,10 +8,7 @@ import notification.service.yowyob.inc.notification.application.port.output.serv
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
-import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.Context;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -19,8 +16,6 @@ import java.util.Properties;
 @AllArgsConstructor
 @Slf4j
 public class EmailSenderServiceAdapter implements EmailSenderServiceInterface {
-
-  private final TemplateEngine templateEngine;
 
   @Override
   public void sendEamil(String to, String from, String template, Map<String, String> data, String subject,
@@ -39,20 +34,17 @@ public class EmailSenderServiceAdapter implements EmailSenderServiceInterface {
     props.put("mail.smtp.starttls.enable", "true");
     props.put("mail.debug", "true"); // Mettre à false en production
 
-    // 2. Préparer le contexte pour Thymeleaf
-    Context context = new Context();
-        context.setVariables(new HashMap<>(data));
+    // 2. Remplacer les variables dans le sujet et le corps de l'email
+    String processedSubject = replaceVariables(subject, data);
+    String htmlBody = replaceVariables(template, data);
 
-    // 3. Traiter le template HTML avec les données
-    String htmlBody = templateEngine.process(template, context);
-
-    // 4. Créer et envoyer le message
+    // 3. Créer et envoyer le message
     try {
       MimeMessage mimeMessage = mailSender.createMimeMessage();
       MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
       helper.setFrom(from);
       helper.setTo(to);
-      helper.setSubject(subject);
+      helper.setSubject(processedSubject);
       helper.setText(htmlBody, true); // true indique que le contenu est HTML
 
       mailSender.send(mimeMessage);
@@ -63,5 +55,13 @@ public class EmailSenderServiceAdapter implements EmailSenderServiceInterface {
       // Dans une vraie application, vous pourriez lancer une exception personnalisée
       // ici
     }
+  }
+
+  private String replaceVariables(String templateString, Map<String, String> variables) {
+    String result = templateString;
+    for (Map.Entry<String, String> entry : variables.entrySet()) {
+      result = result.replace("{{" + entry.getKey() + "}}", entry.getValue());
+    }
+    return result;
   }
 }

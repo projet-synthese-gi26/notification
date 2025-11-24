@@ -35,17 +35,16 @@ public class DomainConfig {
   }
 
   @Bean
-  public ContextSenderStrategy contextSenderStrategy(Map<NotificationType, SenderStrategy> senderStrategies) {
-    // Spring va automatiquement injecter une Map de tous les beans qui implémentent
-    // SenderStrategy.
-    // La clé sera le nom du bean (ex: "emailSenderService").
-    // Nous devons transformer cela en Map<NotificationType, SenderStrategy>
-    // Pour l'instant, nous laissons la logique de mappage au constructeur ou à une
-    // méthode d'initialisation.
-    // Pour la simplicité, nous allons juste passer la map telle quelle.
-    // Une implémentation plus robuste mapperait les noms de bean aux types de
-    // notification.
-    return new ContextSenderStrategy(senderStrategies);
+  public ContextSenderStrategy contextSenderStrategy(Map<String, SenderStrategy> senderStrategies) {
+    // Spring injecte une Map où la clé est le nom du bean (String).
+    // Nous devons la transformer en Map<NotificationType, SenderStrategy>.
+    Map<NotificationType, SenderStrategy> strategyMap = Map.of(
+        NotificationType.EMAIL, senderStrategies.get("emailSenderService"),
+        NotificationType.SMS, senderStrategies.get("smsSenderService")
+        // Ajoutez PULL ici si vous avez un service pour cela
+    );
+
+    return new ContextSenderStrategy(strategyMap);
   }
 
   @Bean
@@ -75,7 +74,8 @@ public class DomainConfig {
   public TemplateFactory templateFactory(
       SMSTemplateService smsTemplateService,
       EmailTemplateService emailTemplateService,
-      PullTemplateService pullTemplateService) {
-    return new TemplateFactory(smsTemplateService, emailTemplateService, pullTemplateService);
+      PullTemplateService pullTemplateService,
+      ServiceAppService serviceAppService) {
+    return new TemplateFactory(smsTemplateService, emailTemplateService, pullTemplateService, serviceAppService);
   }
 }
