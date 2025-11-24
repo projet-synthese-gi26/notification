@@ -11,7 +11,7 @@ import lombok.Data;
 public class EmailSenderEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private int id;
+  private int emailSenderId;
   private String serverHost;
   private String serverPort;
   private String username;

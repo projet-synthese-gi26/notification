@@ -13,7 +13,7 @@ public class EmailTemplateEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private int id;
+  private int templateId;
   private String name;
   private String description;
   private String fromEmail;

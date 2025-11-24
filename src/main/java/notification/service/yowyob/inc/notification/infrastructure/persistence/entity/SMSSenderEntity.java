@@ -11,7 +11,7 @@ import lombok.Data;
 public class SMSSenderEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private int id;
+  private int smsSenderId;
   private String serverHost;
   private String serverPort;
   private String token;

@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: notificaton
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:notificaton}
+    username: ${DB_USER:notificaton}
+    password: ${DB_PASSWORD:notificaton}
+  jpa:
+    hibernate:
+      ddl-auto: update # create | create-drop | update | validate | none
+    show-sql: true
+    properties:
+      hibernate:
+        format-sql: true
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect

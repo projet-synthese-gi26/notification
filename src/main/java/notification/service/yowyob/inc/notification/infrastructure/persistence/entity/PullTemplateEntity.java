@@ -12,7 +12,7 @@ import lombok.Data;
 public class PullTemplateEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private int id;
+  private int templateId;
   private String name;
   private String description;
   private String message;

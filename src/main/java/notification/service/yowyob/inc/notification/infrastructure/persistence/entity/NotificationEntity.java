@@ -20,7 +20,7 @@ import notification.service.yowyob.inc.notification.application.domain.enums.Not
 public class NotificationEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private int id;
+  private int notificationId;
   private UUID userId;
   private int templateId;
 

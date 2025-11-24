@@ -14,7 +14,7 @@ public class SMSTemplateEntity {
   private String message;
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private int id;
+  private int templateId;
   private String name;
   private String description;
 
