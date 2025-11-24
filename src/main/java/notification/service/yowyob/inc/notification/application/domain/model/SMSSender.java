@@ -4,7 +4,8 @@ import lombok.Data;
 
 @Data
 public class SMSSender {
-  private int id;
+  private int smsSenderId;
+  private int serviceAppId;
   private String serverHost;
   private String serverPort;
   private String token;

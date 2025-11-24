@@ -20,14 +20,14 @@ public class EmailTemplateRepositoryAdapter implements EmailTemplateRepository {
   @Override
   public EmailTemplate save(EmailTemplate emailTemplate) {
     EmailTemplateEntity entity = toEntity(emailTemplate);
-    EmailTemplateEntity savedEntity = emailTemplateEntityRepository.save(entity);
-    return toDomainObject(savedEntity);
+    return modelMapper.map(
+        emailTemplateEntityRepository.save(entity).block(), EmailTemplate.class);
   }
 
   @Override
   public EmailTemplate findById(int id) {
     return emailTemplateEntityRepository.findById(id)
-        .map(this::toDomainObject)
+        .map(this::toDomainObject).blockOptional()
         .orElseThrow(() -> new NoSuchElementException("EmailTemplate not found with id: " + id));
   }
 

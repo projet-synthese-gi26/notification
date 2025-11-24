@@ -18,8 +18,8 @@ public class PullTemplateRepositoryAdapter implements PullTemplateRepository {
   @Override
   public PullTemplate save(PullTemplate pullTemplate) {
     PullTemplateEntity entity = toEntity(pullTemplate);
-    PullTemplateEntity savedEntity = pullTemplateEntityRepository.save(entity);
-    return toDomainObject(savedEntity);
+    return modelMapper.map(
+        pullTemplateEntityRepository.save(entity).block(), PullTemplate.class);
   }
 
   private PullTemplate toDomainObject(PullTemplateEntity entity) {

@@ -18,8 +18,8 @@ public class NotificationRepositoryAdapter implements NotificationRepository {
   @Override
   public Notification save(Notification notification) {
     NotificationEntity entity = toEntity(notification);
-    NotificationEntity savedEntity = notificationEntityRepository.save(entity);
-    return toDomainObject(savedEntity);
+    return modelMapper.map(
+        notificationEntityRepository.save(entity).block(), Notification.class);
   }
 
   private Notification toDomainObject(NotificationEntity entity) {

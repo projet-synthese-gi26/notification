@@ -21,14 +21,14 @@ public class ServiceAppRepositoryAdapter implements ServiceAppRepository {
   @Override
   public ServiceApp save(ServiceApp serviceApp) {
     ServiceAppEntity entity = toEntity(serviceApp);
-    ServiceAppEntity savedEntity = serviceAppEntityRepository.save(entity);
-    return toDomainObject(savedEntity);
+    return modelMapper.map(
+        serviceAppEntityRepository.save(entity).block(), ServiceApp.class);
   }
 
   @Override
   public ServiceApp findByToken(UUID token) {
     return serviceAppEntityRepository.findByToken(token)
-        .map(this::toDomainObject)
+        .map(this::toDomainObject).blockOptional()
         .orElseThrow(() -> new NoSuchElementException("ServiceApp not found with token: " + token));
   }
 

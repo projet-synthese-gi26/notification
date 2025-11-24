@@ -1,9 +1,11 @@
 package notification.service.yowyob.inc.notification.application.domain.service;
 
+import lombok.AllArgsConstructor;
 import notification.service.yowyob.inc.notification.application.domain.enums.NotificationType;
 import notification.service.yowyob.inc.notification.application.domain.model.Template;
 import notification.service.yowyob.inc.notification.application.port.input.dto.TemplateCreateRequest;
 
+@AllArgsConstructor
 public class TemplateFactory {
   SMSTemplateService templateService;
   EmailTemplateService emailTemplateService;

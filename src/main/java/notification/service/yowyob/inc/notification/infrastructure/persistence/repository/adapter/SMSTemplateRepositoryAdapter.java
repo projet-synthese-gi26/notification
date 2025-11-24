@@ -18,8 +18,8 @@ public class SMSTemplateRepositoryAdapter implements SMSTemplateRepository {
   @Override
   public SMSTemplate save(SMSTemplate smsTemplate) {
     SMSTemplateEntity entity = toEntity(smsTemplate);
-    SMSTemplateEntity savedEntity = smsTemplateEntityRepository.save(entity);
-    return toDomainObject(savedEntity);
+    return modelMapper.map(
+        smsTemplateEntityRepository.save(entity).block(), SMSTemplate.class);
   }
 
   private SMSTemplate toDomainObject(SMSTemplateEntity entity) {

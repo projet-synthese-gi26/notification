@@ -18,8 +18,8 @@ public class SMSSenderRepositoryAdapter implements SMSSenderRepository {
   @Override
   public SMSSender save(SMSSender smsSender) {
     SMSSenderEntity entity = toEntity(smsSender);
-    SMSSenderEntity savedEntity = smsSenderEntityRepository.save(entity);
-    return toDomainObject(savedEntity);
+    return modelMapper.map(
+        smsSenderEntityRepository.save(entity).block(), SMSSender.class);
   }
 
   private SMSSender toDomainObject(SMSSenderEntity entity) {

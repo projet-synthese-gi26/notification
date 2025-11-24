@@ -1,18 +1,16 @@
 package notification.service.yowyob.inc.notification.infrastructure.persistence.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import lombok.Data;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
 
 @Data
-@Entity
+@Table("sms_sender")
 public class SMSSenderEntity {
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private int smsSenderId;
   private String serverHost;
   private String serverPort;
   private String token;
+  private Integer serviceAppId;
 }

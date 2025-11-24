@@ -4,7 +4,8 @@ import lombok.Data;
 
 @Data
 public class EmailSender {
-  private int id;
+  private int emailSenderId;
+  private int serviceAppId;
   private String serverHost;
   private String serverPort;
   private String username;
