@@ -2,9 +2,9 @@ spring:
   application:
     name: notificaton
   r2dbc:
-    url: r2dbc:postgresql://${DB_POSTGRES_HOST:172.17.0.2}:${DB_POSTGRES_PORT:5432}/${DB_POSTGRES_NAME:notification}
-    username: ${DB_POSTGRES_USER:notification}
-    password: ${DB_POSTGRES_PASSWORD:notification}
+    url: r2dbc:postgresql://${DB_HOST:172.17.0.2}:${DB_PORT:5432}/${DB_NAME:notification}
+    username: ${DB_USERNAME:notification}
+    password: ${DB_PASSWORD:notification}
     pool:
       enabled: true
   sql:
