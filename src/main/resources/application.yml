@@ -10,6 +10,25 @@ spring:
   sql:
     init:
       mode: always # always | embedded | never
+  kafka:
+    bootstrap-servers: 168.119.122.86:9092
+    consumer:
+      group-id: notification_group_id
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+# CUSTOM CONFIG
+application:
+  kafka:
+    topics:
+      notification-events: notification-topic
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
