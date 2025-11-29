@@ -12,6 +12,7 @@ A comprehensive, reactive, and event-driven microservice for handling multi-chan
 ---
 
 ## 📜 Table of Contents
+
 1.  [Overview](#-overview)
 2.  [Prerequisites & Installation](#-prerequisites--installation)
 3.  [Kafka Integration](#-kafka-integration)
@@ -29,6 +30,7 @@ A comprehensive, reactive, and event-driven microservice for handling multi-chan
 This service provides a centralized solution for managing and sending notifications. It is designed to be highly scalable and resilient, using a non-blocking stack and message queuing.
 
 ### Key Features
+
 - **Multi-channel Notifications**: Send notifications via Email, SMS, and Push channels.
 - **Service Registration**: Onboard new applications/services to use the notification system. Each registered service gets a unique token for API access.
 - **Template Engine**: Create and manage notification templates to standardize communication.
@@ -37,15 +39,17 @@ This service provides a centralized solution for managing and sending notificati
 - **Reactive Stack**: Built entirely on a reactive foundation (Spring WebFlux, R2DBC) for efficient resource utilization.
 
 ### Architecture
+
 The application follows a standard Hexagonal Architecture pattern.
 
 - **`application`**: Contains the core domain logic, services, and ports (interfaces).
 - **`infrastructure`**: Provides the concrete implementations (adapters) for the ports, including:
-    - REST Controllers (`web`)
-    - Kafka Listeners (`listener.kafka`)
-    - Database Repositories (`persistence`)
+  - REST Controllers (`web`)
+  - Kafka Listeners (`listener.kafka`)
+  - Database Repositories (`persistence`)
 
 ### Technologies
+
 - **Java 21**
 - **Spring Boot 3**
 - **Spring WebFlux**: Reactive web framework.
@@ -62,13 +66,16 @@ The application follows a standard Hexagonal Architecture pattern.
 ## 🛠️ Prerequisites & Installation
 
 ### Prerequisites
+
 - **Java 21**: Ensure you have JDK 21 installed.
 - **Maven 3.9+**: For building the project.
 - **Docker & Docker Compose**: For running the application and its dependencies (Kafka, PostgreSQL).
 - **Active Kafka & PostgreSQL instances**.
 
 ### Installation
+
 1.  **Clone the repository:**
+
     ```bash
     git clone <repository-url>
     cd notification
@@ -106,28 +113,32 @@ The application follows a standard Hexagonal Architecture pattern.
     ```bash
     java -jar target/*.jar
     ```
+
     Or, use Docker Compose for a complete environment (recommended).
 
 ---
 
-##  kafka-streams  Kafka Integration
+## kafka-streams Kafka Integration
 
 The service is deeply integrated with Kafka for asynchronous processing. All core actions can be triggered by publishing messages to specific topics.
 
 ### Kafka Topics
+
 The application creates and listens to the following topics:
 
-| Topic Name                  | Purpose                                        |
-| --------------------------- | ---------------------------------------------- |
-| `service-registration-topic`| To register a new service application.         |
-| `template-create-topic`     | To create a new notification template.         |
-| `notification-create-topic` | To create a notification to be sent later.     |
-| `notification-send-topic`   | To send a notification immediately.            |
+| Topic Name                   | Purpose                                    |
+| ---------------------------- | ------------------------------------------ |
+| `service-registration-topic` | To register a new service application.     |
+| `template-create-topic`      | To create a new notification template.     |
+| `notification-create-topic`  | To create a notification to be sent later. |
+| `notification-send-topic`    | To send a notification immediately.        |
 
 ### Security: `X-Service-Token` Header
+
 For security, most Kafka messages require a header named `X-Service-Token`. This header must contain the unique token generated when a service was registered. **Messages without a valid token on protected topics will be rejected.**
 
 ### Message Schema
+
 All messages are in JSON format. The structure for each topic is detailed in the [Usage with Kafka](#-usage-with-kafka) section.
 
 ---
@@ -137,6 +148,7 @@ All messages are in JSON format. The structure for each topic is detailed in the
 The REST API provides a synchronous way to interact with the service.
 
 ### Authentication
+
 All endpoints (except for service registration) are protected and require the `X-Service-Token` header to be present with a valid service token.
 
 ---
@@ -144,14 +156,17 @@ All endpoints (except for service registration) are protected and require the `X
 ### 1. Service Management
 
 #### POST `/api/v1/services`
+
 Registers a new service application. This is the first step to using the notification service. The response contains the `serviceId` and the all-important `token` needed for all other API calls.
 
 - **Method**: `POST`
 - **URL**: `/api/v1/services`
 - **Headers**:
-    - `Content-Type: application/json`
+
+  - `Content-Type: application/json`
 
 - **Request Body**:
+
   ```json
   {
     "name": "My Awesome App",
@@ -166,6 +181,7 @@ Registers a new service application. This is the first step to using the notific
   ```
 
 - **Response (200 OK)**:
+
   ```json
   {
     "serviceId": 1,
@@ -195,31 +211,36 @@ Registers a new service application. This is the first step to using the notific
 ### 2. Template Management
 
 #### POST `/api/v1/templates`
+
 Creates a new notification template for a registered service.
 
 - **Method**: `POST`
 - **URL**: `/api/v1/templates`
 - **Headers**:
-    - `Content-Type: application/json`
-    - `X-Service-Token: <your-service-token>` **(Required)**
+
+  - `Content-Type: application/json`
+  - `X-Service-Token: <your-service-token>` **(Required)**
 
 - **Request Body**:
+
   ```json
   {
     "templateId": 101,
     "fromEmail": "noreply@myawesomeapp.com",
     "name": "Welcome Email",
     "description": "Template for welcoming new users.",
-    "message": "Welcome, ${userName}! Thank you for joining.",
+    "message": "Welcome, {{userName}}! Thank you for joining.",
     "subject": "Welcome to My Awesome App!",
-    "bodyHtml": "<h1>Welcome, ${userName}!</h1><p>Thank you for joining.</p>",
+    "bodyHtml": "<h1>Welcome, {{userName}}!</h1><p>Thank you for joining.</p>",
     "type": "EMAIL"
   }
   ```
-  * `type` can be `EMAIL`, `SMS`, or `PULL` (for push notifications).
-  * `message` is used for SMS/PULL, while `subject` and `bodyHtml` are for EMAIL.
+
+  - `type` can be `EMAIL`, `SMS`, or `PULL` (for push notifications).
+  - `message` is used for SMS/PULL, while `subject` and `bodyHtml` are for EMAIL.
 
 - **Response (200 OK)**:
+
   ```json
   {
     "message": "template successfully created"
@@ -236,26 +257,30 @@ Creates a new notification template for a registered service.
     "fromEmail": "noreply@myawesomeapp.com",
     "name": "Welcome Email",
     "description": "Template for welcoming new users.",
-    "message": "Welcome, ${userName}! Thank you for joining.",
+    "message": "Welcome, {{userName}}! Thank you for joining.",
     "subject": "Welcome to My Awesome App!",
-    "bodyHtml": "<h1>Welcome, ${userName}!</h1><p>Thank you for joining.</p>",
+    "bodyHtml": "<h1>Welcome, {{userName}}!</h1><p>Thank you for joining.</p>",
     "type": "EMAIL"
   }'
   ```
+
 ---
 
 ### 3. Notification Management
 
 #### POST `/api/v1/notifications`
+
 Creates a notification without sending it immediately. This is useful for scheduling or review processes.
 
 - **Method**: `POST`
 - **URL**: `/api/v1/notifications`
 - **Headers**:
-    - `Content-Type: application/json`
-    - `X-Service-Token: <your-service-token>` **(Required)**
+
+  - `Content-Type: application/json`
+  - `X-Service-Token: <your-service-token>` **(Required)**
 
 - **Request Body**:
+
   ```json
   {
     "notificationType": "EMAIL",
@@ -266,9 +291,11 @@ Creates a notification without sending it immediately. This is useful for schedu
     }
   }
   ```
-  * `data` contains key-value pairs to replace variables in the template (e.g., `${userName}`).
+
+  - `data` contains key-value pairs to replace variables in the template (e.g., `{{userName}}`).
 
 - **Response (200 OK)**:
+
   ```json
   {
     "message": "notification successfully created"
@@ -291,15 +318,18 @@ Creates a notification without sending it immediately. This is useful for schedu
   ```
 
 #### POST `/api/v1/notifications/send`
+
 Sends a notification immediately to a specified recipient.
 
 - **Method**: `POST`
 - **URL**: `/api/v1/notifications/send`
 - **Headers**:
-    - `Content-Type: application/json`
-    - `X-Service-Token: <your-service-token>` **(Required)**
+
+  - `Content-Type: application/json`
+  - `X-Service-Token: <your-service-token>` **(Required)**
 
 - **Request Body**:
+
   ```json
   {
     "notificationType": "EMAIL",
@@ -310,9 +340,11 @@ Sends a notification immediately to a specified recipient.
     }
   }
   ```
-  * `to` is the recipient's address (e.g., email address, phone number).
+
+  - `to` is the recipient's address (e.g., email address, phone number).
 
 - **Response (200 OK)**:
+
   ```json
   {
     "message": "notification successfully sent"
@@ -341,6 +373,7 @@ Sends a notification immediately to a specified recipient.
 You can trigger all core functionalities by publishing messages to the Kafka topics. This is the preferred method for asynchronous, decoupled systems.
 
 ### 1. Register a Service
+
 - **Topic**: `service-registration-topic`
 - **Headers**: None
 - **Message Payload**:
@@ -357,12 +390,13 @@ You can trigger all core functionalities by publishing messages to the Kafka top
     "smstoken": "your-sms-provider-token"
   }
   ```
-  *Note: The generated service token will be logged by the application. You must retrieve it from the logs to use for subsequent messages.*
+  _Note: The generated service token will be logged by the application. You must retrieve it from the logs to use for subsequent messages._
 
 ### 2. Create a Template
+
 - **Topic**: `template-create-topic`
 - **Headers**:
-    - `X-Service-Token`: `<your-service-token>` **(Required)**
+  - `X-Service-Token`: `<your-service-token>` **(Required)**
 - **Message Payload**:
   Same as the REST request body for `POST /api/v1/templates`.
   ```json
@@ -371,17 +405,18 @@ You can trigger all core functionalities by publishing messages to the Kafka top
     "fromEmail": "noreply@mykafkadrivenapp.com",
     "name": "Kafka Welcome Email",
     "description": "Template for welcoming new users via Kafka.",
-    "message": "Welcome, ${userName}!",
+    "message": "Welcome, {{userName}}!",
     "subject": "Welcome from Kafka!",
-    "bodyHtml": "<h1>Welcome, ${userName}!</h1>",
+    "bodyHtml": "<h1>Welcome, {{userName}}!</h1>",
     "type": "EMAIL"
   }
   ```
 
 ### 3. Create a Notification
+
 - **Topic**: `notification-create-topic`
 - **Headers**:
-    - `X-Service-Token`: `<your-service-token>` **(Required)**
+  - `X-Service-Token`: `<your-service-token>` **(Required)**
 - **Message Payload**:
   Same as the REST request body for `POST /api/v1/notifications`.
   ```json
@@ -394,9 +429,10 @@ You can trigger all core functionalities by publishing messages to the Kafka top
   ```
 
 ### 4. Send a Notification
+
 - **Topic**: `notification-send-topic`
 - **Headers**:
-    - `X-Service-Token`: `<your-service-token>` **(Required)**
+  - `X-Service-Token`: `<your-service-token>` **(Required)**
 - **Message Payload**:
   Same as the REST request body for `POST /api/v1/notifications/send`.
   ```json
@@ -415,13 +451,17 @@ You can trigger all core functionalities by publishing messages to the Kafka top
 The project uses JUnit 5 for testing. The CI/CD pipeline is configured to run tests automatically on every push.
 
 To run tests locally:
+
 ```bash
 ./mvnw test
 ```
+
 Or, to run verification which includes tests:
+
 ```bash
 ./mvnw clean verify
 ```
+
 The main integration test class `NotificationApplicationTests.java` ensures that the Spring application context loads correctly.
 
 ---
@@ -431,6 +471,7 @@ The main integration test class `NotificationApplicationTests.java` ensures that
 The application is designed to be deployed as a Docker container.
 
 ### Building the Docker Image
+
 The `Dockerfile` in the root directory defines a multi-stage build process.
 
 1.  **Build the image locally:**
@@ -439,11 +480,13 @@ The `Dockerfile` in the root directory defines a multi-stage build process.
     ```
 
 ### Running with Docker Compose
+
 For a full local environment, a `docker-compose.yml` file is recommended to orchestrate the `notification-service`, a PostgreSQL database, and a Kafka cluster.
 
 Example `docker-compose.yml`:
+
 ```yaml
-version: '3.8'
+version: "3.8"
 services:
   postgres:
     image: postgres:15
@@ -455,9 +498,9 @@ services:
       - "5432:5432"
 
   kafka:
-    image: 'bitnami/kafka:latest'
+    image: "bitnami/kafka:latest"
     ports:
-      - '9092:9092'
+      - "9092:9092"
     environment:
       - KAFKA_CFG_NODE_ID=0
       - KAFKA_CFG_PROCESS_ROLES=controller,broker
@@ -479,10 +522,13 @@ services:
       - SPRING_R2DBC_PASSWORD=password
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
 ```
+
 Run `docker-compose up` to start all services.
 
 ### CI/CD Pipeline
+
 The repository is configured with a GitHub Actions workflow in `.github/workflows/ci-cd.yml` which automates:
+
 1.  **Testing**: Runs `mvn clean verify` on every push to any branch.
 2.  **Building**: On a push to the `main` branch, it builds a Docker image.
 3.  **Publishing**: It pushes the built image to GitHub Container Registry (ghcr.io).
@@ -493,6 +539,7 @@ The repository is configured with a GitHub Actions workflow in `.github/workflow
 ## 🙌 Contributing
 
 Contributions are welcome! Please follow these guidelines:
+
 - **Branching**: Create a new branch for each feature or bug fix (`feature/my-new-feature` or `fix/issue-description`).
 - **Code Style**: Adhere to the existing code style.
 - **Tests**: Add unit or integration tests for any new functionality.
