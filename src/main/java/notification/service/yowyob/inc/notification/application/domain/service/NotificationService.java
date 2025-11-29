@@ -1,6 +1,7 @@
 package notification.service.yowyob.inc.notification.application.domain.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -19,7 +20,7 @@ public class NotificationService {
 
   private final NotificationRepository notificationRepository;
 
-  public void send(String token, NotificationType notificationType, int templateId, String to,
+  public void send(String token, NotificationType notificationType, int templateId, List<String> to,
       Map<String, String> data) {
     ServiceApp serviceApp = this.serviceAppService.getServiceAppByToken(token);
     contextSenderStrategy.getSenderStrategy(notificationType).execute(serviceApp, templateId, to, data);

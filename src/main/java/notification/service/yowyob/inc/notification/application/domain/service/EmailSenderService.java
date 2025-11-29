@@ -1,5 +1,6 @@
 package notification.service.yowyob.inc.notification.application.domain.service;
 
+import java.util.List;
 import java.util.Map;
 
 import lombok.AllArgsConstructor;
@@ -18,7 +19,7 @@ public class EmailSenderService implements SenderStrategy {
   EmailSenderServiceInterface emailSenderServiceInterface;
 
   @Override
-  public void execute(ServiceApp serviceApp, int templateId, String to, Map<String, String> data) {
+  public void execute(ServiceApp serviceApp, int templateId, List<String> to, Map<String, String> data) {
     EmailTemplate template = this.emailTemplateRepository.findById(templateId);
     EmailSender emailSender = this.emailSenderRepository.findByServiceApp(serviceApp);
 

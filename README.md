@@ -334,7 +334,7 @@ Sends a notification immediately to a specified recipient.
   {
     "notificationType": "EMAIL",
     "templateId": 101,
-    "to": "john.doe@email.com",
+    "to": ["john.doe@email.com"],
     "data": {
       "userName": "John Doe"
     }
@@ -359,7 +359,7 @@ Sends a notification immediately to a specified recipient.
   -d '{
     "notificationType": "EMAIL",
     "templateId": 101,
-    "to": "john.doe@email.com",
+    "to": ["john.doe@email.com"],
     "data": {
       "userName": "John Doe"
     }
@@ -439,7 +439,7 @@ You can trigger all core functionalities by publishing messages to the Kafka top
   {
     "notificationType": "SMS",
     "templateId": 103,
-    "to": "+1234567890",
+    "to": ["+1234567890"],
     "data": { "orderId": "XYZ-123" }
   }
   ```
