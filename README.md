@@ -124,14 +124,14 @@ The service is deeply integrated with Kafka for asynchronous processing. All cor
 
 ### Kafka Topics
 
-The application creates and listens to the following topics:
+The application creates and listens to the following topics for handling notifications:
 
 | Topic Name                   | Purpose                                    |
 | ---------------------------- | ------------------------------------------ |
-| `service-registration-topic` | To register a new service application.     |
-| `template-create-topic`      | To create a new notification template.     |
 | `notification-create-topic`  | To create a notification to be sent later. |
 | `notification-send-topic`    | To send a notification immediately.        |
+
+Service and template management are performed exclusively via the [REST API](#-rest-api-documentation) to ensure transactional integrity and immediate feedback.
 
 ### Security: `X-Service-Token` Header
 
@@ -370,49 +370,11 @@ Sends a notification immediately to a specified recipient.
 
 ## 📬 Usage with Kafka
 
-You can trigger all core functionalities by publishing messages to the Kafka topics. This is the preferred method for asynchronous, decoupled systems.
+You can trigger notification creation and sending by publishing messages to the Kafka topics. This is the preferred method for asynchronous, decoupled systems.
 
-### 1. Register a Service
+**Note**: Service registration and template creation are only available via the [REST API](#-rest-api-documentation).
 
-- **Topic**: `service-registration-topic`
-- **Headers**: None
-- **Message Payload**:
-  Same as the REST request body for `POST /api/v1/services`.
-  ```json
-  {
-    "name": "My Kafka-Driven App",
-    "emailServerHost": "smtp.example.com",
-    "emailServerPort": "587",
-    "emailUsername": "user@example.com",
-    "emailPassword": "your-smtp-password",
-    "smsServerHost": "sms.provider.com",
-    "smsServerPort": "8080",
-    "smstoken": "your-sms-provider-token"
-  }
-  ```
-  _Note: The generated service token will be logged by the application. You must retrieve it from the logs to use for subsequent messages._
-
-### 2. Create a Template
-
-- **Topic**: `template-create-topic`
-- **Headers**:
-  - `X-Service-Token`: `<your-service-token>` **(Required)**
-- **Message Payload**:
-  Same as the REST request body for `POST /api/v1/templates`.
-  ```json
-  {
-    "templateId": 102,
-    "fromEmail": "noreply@mykafkadrivenapp.com",
-    "name": "Kafka Welcome Email",
-    "description": "Template for welcoming new users via Kafka.",
-    "message": "Welcome, {{userName}}!",
-    "subject": "Welcome from Kafka!",
-    "bodyHtml": "<h1>Welcome, {{userName}}!</h1>",
-    "type": "EMAIL"
-  }
-  ```
-
-### 3. Create a Notification
+### 1. Create a Notification
 
 - **Topic**: `notification-create-topic`
 - **Headers**:
@@ -428,7 +390,7 @@ You can trigger all core functionalities by publishing messages to the Kafka top
   }
   ```
 
-### 4. Send a Notification
+### 2. Send a Notification
 
 - **Topic**: `notification-send-topic`
 - **Headers**:
