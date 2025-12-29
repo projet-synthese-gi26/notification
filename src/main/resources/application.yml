@@ -7,6 +7,13 @@ spring:
     password: ${DB_PASSWORD:notification}
     pool:
       enabled: true
+      initial-size: 1
+      max-size: 5
+      max-idle-time: 30m
+      max-life-time: 10m
+      acquire-retry: 3
+      max-acquire-time: 30s
+      validation-query: SELECT 1
   sql:
     init:
       mode: always # always | embedded | never
