@@ -14,7 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 @Tag(name = "Template Management", description = "APIs for creating and managing notification templates")
 @RestController
@@ -24,7 +23,7 @@ public class TemplateController {
 
   private final TemplateFactory templateFactory;
 
-  @Operation(summary = "Create a new notification template", description = "Creates a new template (EMAIL, SMS, or PULL) for a specific service.", responses = {
+  @Operation(summary = "Create a new notification template", description = "Creates a new template (EMAIL, SMS, WHATSAPP, or PULL) for a specific service.", responses = {
       @ApiResponse(responseCode = "201", description = "Template created successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Template.class))),
       @ApiResponse(responseCode = "400", description = "Invalid request payload"),
       @ApiResponse(responseCode = "401", description = "Invalid or missing service token")
@@ -34,8 +33,7 @@ public class TemplateController {
       @Parameter(description = "Service authentication token", required = true) @RequestHeader("X-Service-Token") String token,
       @RequestBody TemplateCreateRequest request) {
 
-    return Mono.fromCallable(() -> templateFactory.createTemplate(token, request))
-        .subscribeOn(Schedulers.boundedElastic())
+    return templateFactory.createTemplate(token, request)
         .map(createdTemplate -> ResponseEntity.status(HttpStatus.CREATED).body(createdTemplate));
   }
 }

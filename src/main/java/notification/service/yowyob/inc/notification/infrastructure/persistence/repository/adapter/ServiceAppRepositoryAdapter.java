@@ -7,8 +7,8 @@ import notification.service.yowyob.inc.notification.infrastructure.persistence.e
 import notification.service.yowyob.inc.notification.infrastructure.persistence.repository.ServiceAppEntityRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
-import java.util.NoSuchElementException;
 import java.util.UUID;
 
 @Component
@@ -19,17 +19,16 @@ public class ServiceAppRepositoryAdapter implements ServiceAppRepository {
   private final ModelMapper modelMapper;
 
   @Override
-  public ServiceApp save(ServiceApp serviceApp) {
+  public Mono<ServiceApp> save(ServiceApp serviceApp) {
     ServiceAppEntity entity = toEntity(serviceApp);
-    return modelMapper.map(
-        serviceAppEntityRepository.save(entity).block(), ServiceApp.class);
+    return serviceAppEntityRepository.save(entity)
+            .map(this::toDomainObject);
   }
 
   @Override
-  public ServiceApp findByToken(UUID token) {
+  public Mono<ServiceApp> findByToken(UUID token) {
     return serviceAppEntityRepository.findByToken(token)
-        .map(this::toDomainObject).blockOptional()
-        .orElseThrow(() -> new NoSuchElementException("ServiceApp not found with token: " + token));
+        .map(this::toDomainObject);
   }
 
   private ServiceApp toDomainObject(ServiceAppEntity entity) {

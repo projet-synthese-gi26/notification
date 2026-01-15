@@ -31,7 +31,7 @@ This service provides a centralized solution for managing and sending notificati
 
 ### Key Features
 
-- **Multi-channel Notifications**: Send notifications via Email, SMS, and Push channels.
+- **Multi-channel Notifications**: Send notifications via Email, SMS, WhatsApp, and Pull channels.
 - **Service Registration**: Onboard new applications/services to use the notification system. Each registered service gets a unique token for API access.
 - **Template Engine**: Create and manage notification templates to standardize communication.
 - **Asynchronous by Default**: Operations are processed asynchronously via a Kafka message queue, ensuring high throughput.
@@ -118,7 +118,117 @@ The application follows a standard Hexagonal Architecture pattern.
 
 ---
 
-## kafka-streams Kafka Integration
+## 🚀 How to Use the Notification Service
+
+This section guides you through the typical workflow of using the Notification Service, from initial setup to sending multi-channel notifications.
+
+### Step 1: Onboarding Your Application
+
+Before you can send any notifications, you need to register your application with the Notification Service. This step provides you with a unique `X-Service-Token` that acts as your API key. For detailed instructions and examples, refer to the [Service Management](#1-service-management) section in the REST API Documentation.
+
+```mermaid
+sequenceDiagram
+    participant YourApp as Your Application
+    participant NotificationService as Notification Service
+    participant Database as Database (PostgreSQL)
+
+    YourApp->>NotificationService: POST /api/v1/services (Register App Details)
+    NotificationService->>Database: Store ServiceApp Details
+    Database-->>NotificationService: Confirmation
+    NotificationService-->>YourApp: 200 OK + {serviceId, token}
+    YourApp-->>YourApp: Store X-Service-Token Securely
+```
+
+### Step 2: Providing Notification Templates
+
+Once your application is onboarded, you can define reusable templates for different notification types (Email, SMS, WhatsApp, Pull). These templates standardize your messages and simplify sending. For detailed instructions and examples, refer to the [Template Management](#2-template-management) section in the REST API Documentation.
+
+```mermaid
+sequenceDiagram
+    participant YourApp as Your Application
+    participant NotificationService as Notification Service
+    participant Database as Database (PostgreSQL)
+
+    YourApp->>NotificationService: POST /api/v1/templates (Create Email Template)
+    Note over NotificationService: Uses X-Service-Token
+    NotificationService->>Database: Store EmailTemplate Details
+    Database-->>NotificationService: Confirmation
+    NotificationService-->>YourApp: 200 OK + Confirmation
+
+    YourApp->>NotificationService: POST /api/v1/templates (Create WhatsApp Template)
+    Note over NotificationService: Uses X-Service-Token
+    NotificationService->>Database: Store WhatsappTemplate Details
+    Database-->>NotificationService: Confirmation
+    NotificationService-->>YourApp: 200 OK + Confirmation
+
+    YourApp->>NotificationService: POST /api/v1/templates (Create SMS/Pull Template)
+    Note over NotificationService: Uses X-Service-Token
+    NotificationService->>Database: Store SMSTemplate/PullTemplate Details
+    Database-->>NotificationService: Confirmation
+    NotificationService-->>YourApp: 200 OK + Confirmation
+```
+
+### Step 3: Sending Notifications
+
+With your application registered and templates defined, you're ready to send notifications! You can do this either synchronously via the REST API or asynchronously via Kafka.
+
+#### Option A: Sending Directly (REST API)
+
+For immediate, direct notification sending. Refer to the [POST /api/v1/notifications/send](#post-apiv1notificationssend) section in the REST API Documentation for details and examples.
+
+```mermaid
+sequenceDiagram
+    participant YourApp as Your Application
+    participant NotificationService as Notification Service
+    participant ExternalService as External Sender (Email/SMS/WhatsApp)
+
+    YourApp->>NotificationService: POST /api/v1/notifications/send (Send Notification Request)
+    Note over NotificationService: Uses X-Service-Token & TemplateId
+    NotificationService->>ExternalService: Send Actual Notification
+    ExternalService-->>NotificationService: Delivery Confirmation
+    NotificationService-->>YourApp: 202 Accepted + Confirmation
+```
+
+#### Option B: Creating for Later (REST API)
+
+To store a notification for later processing or review, without immediate sending. Refer to the [POST /api/v1/notifications](#post-apiv1notifications) section in the REST API Documentation for details and examples.
+
+```mermaid
+sequenceDiagram
+    participant YourApp as Your Application
+    participant NotificationService as Notification Service
+    participant Database as Database (PostgreSQL)
+
+    YourApp->>NotificationService: POST /api/v1/notifications (Create Notification Request)
+    Note over NotificationService: Uses X-Service-Token & TemplateId
+    NotificationService->>Database: Store Notification Details (Pending)
+    Database-->>NotificationService: Confirmation
+    NotificationService-->>YourApp: 201 Created + Confirmation
+```
+
+#### Option C: Asynchronously via Kafka
+
+For high-throughput, decoupled notification processing. Publish a message to the relevant Kafka topic. Refer to the [Usage with Kafka](#-usage-with-kafka) section for details and examples on how to use `notification-create-topic` and `notification-send-topic`.
+
+```mermaid
+sequenceDiagram
+    participant YourApp as Your Application
+    participant Kafka as Apache Kafka
+    participant NotificationService as Notification Service
+    participant ExternalService as External Sender (Email/SMS/WhatsApp)
+
+    YourApp->>Kafka: Publish to notification-send-topic (Notification Message)
+    Note over Kafka: Includes X-Service-Token & TemplateId
+    Kafka-->>NotificationService: Consumes Notification Message
+    NotificationService->>ExternalService: Send Actual Notification
+    ExternalService-->>NotificationService: Delivery Confirmation
+    NotificationService->>NotificationService: Update Notification Status (e.g., in DB)
+```
+
+
+---
+
+## 📬 Kafka Integration
 
 The service is deeply integrated with Kafka for asynchronous processing. All core actions can be triggered by publishing messages to specific topics.
 
@@ -126,10 +236,10 @@ The service is deeply integrated with Kafka for asynchronous processing. All cor
 
 The application creates and listens to the following topics for handling notifications:
 
-| Topic Name                   | Purpose                                    |
-| ---------------------------- | ------------------------------------------ |
-| `notification-create-topic`  | To create a notification to be sent later. |
-| `notification-send-topic`    | To send a notification immediately.        |
+| Topic Name                  | Purpose                                    |
+| --------------------------- | ------------------------------------------ |
+| `notification-create-topic` | To create a notification to be sent later. |
+| `notification-send-topic`   | To send a notification immediately.        |
 
 Service and template management are performed exclusively via the [REST API](#-rest-api-documentation) to ensure transactional integrity and immediate feedback.
 
@@ -176,7 +286,10 @@ Registers a new service application. This is the first step to using the notific
     "emailPassword": "your-smtp-password",
     "smsServerHost": "sms.provider.com",
     "smsServerPort": "8080",
-    "smstoken": "your-sms-provider-token"
+    "smstoken": "your-sms-provider-token",
+    "whatsappApiUrl": "https://715.api.greenapi.com/",
+    "whatsappIdInstance": "your-instance-id",
+    "whatsappApiTokenInstance": "your-api-token"
   }
   ```
 
@@ -202,7 +315,10 @@ Registers a new service application. This is the first step to using the notific
     "emailPassword": "your-smtp-password",
     "smsServerHost": "sms.provider.com",
     "smsServerPort": "8080",
-    "smstoken": "your-sms-provider-token"
+    "smstoken": "your-sms-provider-token",
+    "whatsappApiUrl": "https://715.api.greenapi.com/",
+    "whatsappIdInstance": "your-instance-id",
+    "whatsappApiTokenInstance": "your-api-token"
   }'
   ```
 
@@ -229,15 +345,26 @@ Creates a new notification template for a registered service.
     "fromEmail": "noreply@myawesomeapp.com",
     "name": "Welcome Email",
     "description": "Template for welcoming new users.",
-    "message": "Welcome, {{userName}}! Thank you for joining.",
     "subject": "Welcome to My Awesome App!",
     "bodyHtml": "<h1>Welcome, {{userName}}!</h1><p>Thank you for joining.</p>",
     "type": "EMAIL"
   }
   ```
 
-  - `type` can be `EMAIL`, `SMS`, or `PULL` (for push notifications).
-  - `message` is used for SMS/PULL, while `subject` and `bodyHtml` are for EMAIL.
+  Or for WHATSAPP:
+
+  ```json
+  {
+    "templateId": 102,
+    "name": "Order Confirmation Whatsapp",
+    "description": "Template for WhatsApp order confirmation.",
+    "body": "Hello {{customerName}}, your order {{orderId}} has been confirmed!",
+    "type": "WHATSAPP"
+  }
+  ```
+
+  - `type` can be `EMAIL`, `SMS`, `WHATSAPP`, or `PULL` (for pull/push notifications).
+  - `message` is used for SMS and PULL. `body` is used for WHATSAPP. `subject` and `bodyHtml` are for EMAIL.
 
 - **Response (200 OK)**:
 
@@ -257,10 +384,22 @@ Creates a new notification template for a registered service.
     "fromEmail": "noreply@myawesomeapp.com",
     "name": "Welcome Email",
     "description": "Template for welcoming new users.",
-    "message": "Welcome, {{userName}}! Thank you for joining.",
     "subject": "Welcome to My Awesome App!",
     "bodyHtml": "<h1>Welcome, {{userName}}!</h1><p>Thank you for joining.</p>",
     "type": "EMAIL"
+  }'
+  ```
+  Or for WHATSAPP:
+  ```bash
+  curl -X POST 'http://localhost:8080/api/v1/templates' \
+  -H 'Content-Type: application/json' \
+  -H 'X-Service-Token: <your-service-token>' \
+  -d '{
+    "templateId": 102,
+    "name": "Order Confirmation Whatsapp",
+    "description": "Template for WhatsApp order confirmation.",
+    "body": "Hello {{customerName}}, your order {{orderId}} has been confirmed!",
+    "type": "WHATSAPP"
   }'
   ```
 
@@ -292,6 +431,20 @@ Creates a notification without sending it immediately. This is useful for schedu
   }
   ```
 
+  Or for WHATSAPP:
+
+  ```json
+  {
+    "notificationType": "WHATSAPP",
+    "templateId": 102,
+    "userId": "a-user-uuid-if-exists",
+    "data": {
+      "customerName": "Jane Doe",
+      "orderId": "XYZ-123"
+    }
+  }
+  ```
+
   - `data` contains key-value pairs to replace variables in the template (e.g., `{{userName}}`).
 
 - **Response (200 OK)**:
@@ -313,6 +466,21 @@ Creates a notification without sending it immediately. This is useful for schedu
     "userId": "a-user-uuid-if-exists",
     "data": {
       "userName": "John Doe"
+    }
+  }'
+  ```
+  Or for WHATSAPP:
+  ```bash
+  curl -X POST 'http://localhost:8080/api/v1/notifications' \
+  -H 'Content-Type: application/json' \
+  -H 'X-Service-Token: <your-service-token>' \
+  -d '{
+    "notificationType": "WHATSAPP",
+    "templateId": 102,
+    "userId": "a-user-uuid-if-exists",
+    "data": {
+      "customerName": "Jane Doe",
+      "orderId": "XYZ-123"
     }
   }'
   ```
@@ -341,6 +509,20 @@ Sends a notification immediately to a specified recipient.
   }
   ```
 
+  Or for WHATSAPP:
+
+  ```json
+  {
+    "notificationType": "WHATSAPP",
+    "templateId": 102,
+    "to": ["1234567890"],
+    "data": {
+      "customerName": "Jane Doe",
+      "orderId": "XYZ-123"
+    }
+  }
+  ```
+
   - `to` is the recipient's address (e.g., email address, phone number).
 
 - **Response (200 OK)**:
@@ -362,6 +544,21 @@ Sends a notification immediately to a specified recipient.
     "to": ["john.doe@email.com"],
     "data": {
       "userName": "John Doe"
+    }
+  }'
+  ```
+  Or for WHATSAPP:
+  ```bash
+  curl -X POST 'http://localhost:8080/api/v1/notifications/send' \
+  -H 'Content-Type: application/json' \
+  -H 'X-Service-Token: <your-service-token>' \
+  -d '{
+    "notificationType": "WHATSAPP",
+    "templateId": 102,
+    "to": ["1234567890"],
+    "data": {
+      "customerName": "Jane Doe",
+      "orderId": "XYZ-123"
     }
   }'
   ```
@@ -389,6 +586,15 @@ You can trigger notification creation and sending by publishing messages to the 
     "data": { "userName": "Jane Kafka" }
   }
   ```
+  Or for WHATSAPP:
+  ```json
+  {
+    "notificationType": "WHATSAPP",
+    "templateId": 102,
+    "userId": "some-user-uuid",
+    "data": { "customerName": "Jane Kafka", "orderId": "XYZ-456" }
+  }
+  ```
 
 ### 2. Send a Notification
 
@@ -401,8 +607,17 @@ You can trigger notification creation and sending by publishing messages to the 
   {
     "notificationType": "SMS",
     "templateId": 103,
-    "to": ["+1234567890"],
+    "to": ["1234567890"],
     "data": { "orderId": "XYZ-123" }
+  }
+  ```
+  Or for WHATSAPP:
+  ```json
+  {
+    "notificationType": "WHATSAPP",
+    "templateId": 102,
+    "to": ["1234567890"],
+    "data": { "customerName": "Jane Kafka", "orderId": "XYZ-789" }
   }
   ```
 

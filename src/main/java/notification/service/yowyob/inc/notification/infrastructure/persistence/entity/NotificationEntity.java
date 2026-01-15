@@ -1,7 +1,6 @@
 package notification.service.yowyob.inc.notification.infrastructure.persistence.entity;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 import java.util.UUID;
 
 import lombok.Data;
@@ -20,6 +19,6 @@ public class NotificationEntity {
   private NotificationType notificationType;
   private NotificationStatus status;
   private LocalDateTime createdAt;
-  private Map<String, String> data;
+  private String data; // Changed from Map<String, String> to String
   private Integer serviceAppId;
 }

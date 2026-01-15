@@ -16,7 +16,6 @@ import notification.service.yowyob.inc.notification.application.domain.service.S
 import notification.service.yowyob.inc.notification.application.port.input.dto.ServiceCreateRequest;
 import notification.service.yowyob.inc.notification.application.port.output.dto.ServiceCreateResponse;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 @Tag(name = "Service Management", description = "APIs for registering and managing services")
 @RestController
@@ -32,8 +31,7 @@ public class ServiceAppController {
   @PostMapping
   public Mono<ResponseEntity<ServiceCreateResponse>> registerServiceApp(
       @RequestBody ServiceCreateRequest serviceCreateRequest) {
-    return Mono.fromCallable(() -> serviceAppService.registerServiceApp(serviceCreateRequest))
-        .subscribeOn(Schedulers.boundedElastic())
+    return serviceAppService.registerServiceApp(serviceCreateRequest)
         .map(response -> ResponseEntity.ok().body(response));
   }
 

@@ -2,15 +2,17 @@ package notification.service.yowyob.inc.notification.application.domain.service.
 
 import lombok.AllArgsConstructor;
 import notification.service.yowyob.inc.notification.application.domain.model.ServiceApp;
+import notification.service.yowyob.inc.notification.application.domain.model.Template;
 import notification.service.yowyob.inc.notification.application.domain.model.WhatsappTemplate;
 import notification.service.yowyob.inc.notification.application.domain.repository.WhatsappTemplateRepository;
 import notification.service.yowyob.inc.notification.application.port.input.dto.TemplateCreateRequest;
+import reactor.core.publisher.Mono;
 
 @AllArgsConstructor
 public class WhatsappTemplateService {
-  private WhatsappTemplateRepository whatsappTemplateRepository;
+  private final WhatsappTemplateRepository whatsappTemplateRepository;
 
-  public WhatsappTemplate createWhatsappTemplate(TemplateCreateRequest request, ServiceApp serviceApp) {
+  public Mono<Template> createWhatsappTemplate(TemplateCreateRequest request, ServiceApp serviceApp) {
     WhatsappTemplate template = new WhatsappTemplate();
 
     template.setName(request.getName());
@@ -18,7 +20,7 @@ public class WhatsappTemplateService {
     template.setBody(request.getBody());
     template.setServiceAppId(serviceApp.getServiceId());
 
-    return this.whatsappTemplateRepository.save(template);
+    return this.whatsappTemplateRepository.save(template).cast(Template.class);
   }
 
 }

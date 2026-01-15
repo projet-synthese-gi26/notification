@@ -2,12 +2,9 @@ package notification.service.yowyob.inc.notification.application.domain.reposito
 
 import notification.service.yowyob.inc.notification.application.domain.model.EmailSender;
 import notification.service.yowyob.inc.notification.application.domain.model.ServiceApp;
+import reactor.core.publisher.Mono;
 
 public interface EmailSenderRepository {
-  public EmailSender save(EmailSender emailSender);
-
-  // public EmailSender update(EmailSender emailSender);
-
-  public EmailSender findByServiceApp(ServiceApp serviceApp);
-
+  Mono<EmailSender> save(EmailSender emailSender);
+  Mono<EmailSender> findByServiceApp(ServiceApp serviceApp);
 }

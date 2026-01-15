@@ -1,9 +1,10 @@
 package notification.service.yowyob.inc.notification.application.domain.repository;
 
 import notification.service.yowyob.inc.notification.application.domain.model.SMSSender;
+import notification.service.yowyob.inc.notification.application.domain.model.ServiceApp;
+import reactor.core.publisher.Mono;
 
 public interface SMSSenderRepository {
-  public SMSSender save(SMSSender smsSender);
-
-  // public SMSSender update(SMSSender smsSender);
+  Mono<SMSSender> save(SMSSender smsSender);
+  Mono<SMSSender> findByServiceApp(ServiceApp serviceApp);
 }

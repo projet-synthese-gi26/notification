@@ -5,7 +5,6 @@ import notification.service.yowyob.inc.notification.application.domain.enums.Not
 
 @Data
 public class TemplateCreateRequest {
-  private int templateId;
   private String fromEmail;
   private String name;
   private String description;

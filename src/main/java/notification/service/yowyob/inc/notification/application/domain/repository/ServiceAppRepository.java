@@ -3,9 +3,10 @@ package notification.service.yowyob.inc.notification.application.domain.reposito
 import java.util.UUID;
 
 import notification.service.yowyob.inc.notification.application.domain.model.ServiceApp;
+import reactor.core.publisher.Mono;
 
 public interface ServiceAppRepository {
-  public ServiceApp save(ServiceApp serviceApp);
+  Mono<ServiceApp> save(ServiceApp serviceApp);
 
-  public ServiceApp findByToken(UUID token);
+  Mono<ServiceApp> findByToken(UUID token);
 }

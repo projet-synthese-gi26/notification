@@ -9,38 +9,36 @@ import lombok.AllArgsConstructor;
 import notification.service.yowyob.inc.notification.application.domain.enums.NotificationStatus;
 import notification.service.yowyob.inc.notification.application.domain.enums.NotificationType;
 import notification.service.yowyob.inc.notification.application.domain.model.Notification;
-import notification.service.yowyob.inc.notification.application.domain.model.ServiceApp;
 import notification.service.yowyob.inc.notification.application.domain.repository.NotificationRepository;
 import notification.service.yowyob.inc.notification.application.domain.service.sender.ContextSenderStrategy;
+import reactor.core.publisher.Mono;
 
 @AllArgsConstructor
 public class NotificationService {
   private final ContextSenderStrategy contextSenderStrategy;
-
   private final ServiceAppService serviceAppService;
-
   private final NotificationRepository notificationRepository;
 
-  public void send(String token, NotificationType notificationType, int templateId, List<String> to,
+  public Mono<Void> send(String token, NotificationType notificationType, int templateId, List<String> to,
       Map<String, String> data) {
-    ServiceApp serviceApp = this.serviceAppService.getServiceAppByToken(token);
-    contextSenderStrategy.getSenderStrategy(notificationType).execute(serviceApp, templateId, to, data);
+    return serviceAppService.getServiceAppByToken(token)
+        .flatMap(serviceApp -> contextSenderStrategy.getSenderStrategy(notificationType)
+            .execute(serviceApp, templateId, to, data));
   }
 
-  public void create(String token, NotificationType notificationType, int templateId, UUID userId,
+  public Mono<Notification> create(String token, NotificationType notificationType, int templateId, UUID userId,
       Map<String, String> data) {
-    ServiceApp serviceApp = this.serviceAppService.getServiceAppByToken(token);
-
-    Notification notification = new Notification();
-    notification.setUserId(userId);
-    notification.setStatus(NotificationStatus.PENDING);
-    notification.setData(data);
-    notification.setNotificationType(notificationType);
-    notification.setTemplateId(templateId);
-    notification.setServiceApp(serviceApp);
-    notification.setCreatedAt(LocalDateTime.now());
-
-    this.notificationRepository.save(notification);
+    return serviceAppService.getServiceAppByToken(token)
+        .flatMap(serviceApp -> {
+            Notification notification = new Notification();
+            notification.setUserId(userId);
+            notification.setStatus(NotificationStatus.PENDING);
+            notification.setData(data);
+            notification.setNotificationType(notificationType);
+            notification.setTemplateId(templateId);
+            notification.setServiceAppId(serviceApp.getServiceId()); // Changed to serviceAppId
+            notification.setCreatedAt(LocalDateTime.now());
+            return notificationRepository.save(notification);
+        });
   }
-
 }

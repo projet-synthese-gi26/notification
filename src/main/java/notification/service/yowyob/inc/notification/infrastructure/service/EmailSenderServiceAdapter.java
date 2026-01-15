@@ -9,7 +9,6 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -20,7 +19,7 @@ import java.util.Properties;
 public class EmailSenderServiceAdapter implements EmailSenderServiceInterface {
 
   @Override
-  public void sendEamil(List<String> to, String from, String template, Map<String, String> data, String subject,
+  public void sendEmail(List<String> to, String from, String template, Map<String, String> data, String subject,
       String smtpServer, String smtpPort, String username, String password) {
 
     // 1. Configurer dynamiquement le sender pour chaque envoi

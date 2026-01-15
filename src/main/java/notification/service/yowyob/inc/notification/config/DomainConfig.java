@@ -43,9 +43,8 @@ public class DomainConfig {
   }
 
   @Bean
-  public SMSSenderService smsSenderService() {
-    // Ajoutez les dépendances si nécessaire
-    return new SMSSenderService();
+  public SMSSenderService smsSenderService(SMSTemplateRepository smsTemplateRepository, SMSSenderRepository smsSenderRepository) {
+    return new SMSSenderService(smsTemplateRepository, smsSenderRepository);
   }
 
   @Bean
@@ -58,15 +57,13 @@ public class DomainConfig {
   }
 
   @Bean
-  public ContextSenderStrategy contextSenderStrategy(Map<String, SenderStrategy> senderStrategies) {
-    // Spring injecte une Map où la clé est le nom du bean (String).
-    // Nous devons la transformer en Map<NotificationType, SenderStrategy>.
+  public ContextSenderStrategy contextSenderStrategy(EmailSenderService emailSenderService,
+                                                     SMSSenderService smsSenderService,
+                                                     WhatsappSenderService whatsappSenderService) {
     Map<NotificationType, SenderStrategy> strategyMap = Map.of(
-        NotificationType.EMAIL, senderStrategies.get("emailSenderService"),
-        NotificationType.SMS, senderStrategies.get("smsSenderService"),
-        NotificationType.WHATSAPP, senderStrategies.get("whatsappSenderService")
-    // Ajoutez PULL ici si vous avez un service pour cela
-    );
+        NotificationType.EMAIL, emailSenderService,
+        NotificationType.SMS, smsSenderService,
+        NotificationType.WHATSAPP, whatsappSenderService);
 
     return new ContextSenderStrategy(strategyMap);
   }

@@ -13,7 +13,7 @@ public class Notification {
   private int notificationId;
   private UUID userId;
   private int templateId;
-  private ServiceApp serviceApp;
+  private Integer serviceAppId;
   private NotificationType notificationType;
   private NotificationStatus status;
   private LocalDateTime createdAt;

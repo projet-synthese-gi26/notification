@@ -10,22 +10,32 @@ import notification.service.yowyob.inc.notification.application.domain.model.Wha
 import notification.service.yowyob.inc.notification.application.domain.repository.WhatsappSenderRepository;
 import notification.service.yowyob.inc.notification.application.domain.repository.WhatsappTemplateRepository;
 import notification.service.yowyob.inc.notification.application.port.output.service.WhatsappSenderServiceInterface;
+import reactor.core.publisher.Mono;
 
 @AllArgsConstructor
 public class WhatsappSenderService implements SenderStrategy {
 
-  WhatsappTemplateRepository whatsappTemplateRepository;
-  WhatsappSenderServiceInterface whatsappSenderServiceInterface;
-  WhatsappSenderRepository whatsappSenderRepository;
+  private final WhatsappTemplateRepository whatsappTemplateRepository;
+  private final WhatsappSenderServiceInterface whatsappSenderServiceInterface;
+  private final WhatsappSenderRepository whatsappSenderRepository;
 
   @Override
-  public void execute(ServiceApp serviceApp, int templateId, List<String> to, Map<String, String> data) {
-    WhatsappTemplate whatsappTemplate = this.whatsappTemplateRepository.findByServiceApp(serviceApp);
-    String body = Utils.replaceVariables(whatsappTemplate.getBody(), data);
-    WhatsappSender whatsappSender = this.whatsappSenderRepository.findByServiceApp(serviceApp);
+  public Mono<Void> execute(ServiceApp serviceApp, int templateId, List<String> to, Map<String, String> data) {
+    return whatsappTemplateRepository.findByServiceApp(serviceApp)
+        .zipWith(whatsappSenderRepository.findByServiceApp(serviceApp))
+        .flatMap(tuple -> {
+            WhatsappTemplate whatsappTemplate = tuple.getT1();
+            WhatsappSender whatsappSender = tuple.getT2();
+            String body = Utils.replaceVariables(whatsappTemplate.getBody(), data);
 
-    this.whatsappSenderServiceInterface.sendWhatsappMessage(whatsappSender.getApiUrl(),
-        whatsappSender.getApiTokenInstance(), whatsappSender.getIdInstance(), body);
+            return whatsappSenderServiceInterface.sendWhatsappMessage(
+                whatsappSender.getApiUrl(),
+                whatsappSender.getApiTokenInstance(),
+                whatsappSender.getIdInstance(),
+                body,
+                to
+            );
+        });
   }
 
 }

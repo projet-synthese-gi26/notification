@@ -10,6 +10,7 @@ import notification.service.yowyob.inc.notification.application.domain.model.Ser
 import notification.service.yowyob.inc.notification.application.domain.repository.EmailSenderRepository;
 import notification.service.yowyob.inc.notification.application.domain.repository.EmailTemplateRepository;
 import notification.service.yowyob.inc.notification.application.port.output.service.EmailSenderServiceInterface;
+import reactor.core.publisher.Mono;
 
 @AllArgsConstructor
 public class EmailSenderService implements SenderStrategy {
@@ -19,13 +20,17 @@ public class EmailSenderService implements SenderStrategy {
   EmailSenderServiceInterface emailSenderServiceInterface;
 
   @Override
-  public void execute(ServiceApp serviceApp, int templateId, List<String> to, Map<String, String> data) {
-    EmailTemplate template = this.emailTemplateRepository.findById(templateId);
-    EmailSender emailSender = this.emailSenderRepository.findByServiceApp(serviceApp);
+  public Mono<Void> execute(ServiceApp serviceApp, int templateId, List<String> to, Map<String, String> data) {
+    return emailTemplateRepository.findById(templateId)
+        .zipWith(emailSenderRepository.findByServiceApp(serviceApp))
+        .flatMap(tuple -> {
+            EmailTemplate template = tuple.getT1();
+            EmailSender emailSender = tuple.getT2();
 
-    this.emailSenderServiceInterface.sendEamil(to, template.getFromEmail(), template.getBodyHtml(), data,
-        template.getSubject(), emailSender.getServerHost(), emailSender.getServerPort(), emailSender.getUsername(),
-        emailSender.getPassword());
+            // TODO: emailSenderServiceInterface.sendEmail should be reactive
+            return Mono.fromRunnable(() -> this.emailSenderServiceInterface.sendEmail(to, template.getFromEmail(), template.getBodyHtml(), data,
+                template.getSubject(), emailSender.getServerHost(), emailSender.getServerPort(), emailSender.getUsername(),
+                emailSender.getPassword()));
+        });
   }
-
 }

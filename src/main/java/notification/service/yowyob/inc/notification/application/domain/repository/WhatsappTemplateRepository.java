@@ -2,9 +2,10 @@ package notification.service.yowyob.inc.notification.application.domain.reposito
 
 import notification.service.yowyob.inc.notification.application.domain.model.ServiceApp;
 import notification.service.yowyob.inc.notification.application.domain.model.WhatsappTemplate;
+import reactor.core.publisher.Mono;
 
 public interface WhatsappTemplateRepository {
-  public WhatsappTemplate save(WhatsappTemplate whatsappTemplate);
+  Mono<WhatsappTemplate> save(WhatsappTemplate whatsappTemplate);
 
-  public WhatsappTemplate findByServiceApp(ServiceApp serviceApp);
+  Mono<WhatsappTemplate> findByServiceApp(ServiceApp serviceApp);
 }

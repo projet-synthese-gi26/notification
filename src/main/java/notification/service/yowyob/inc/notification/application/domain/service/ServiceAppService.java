@@ -1,6 +1,8 @@
 package notification.service.yowyob.inc.notification.application.domain.service;
 
 import lombok.AllArgsConstructor;
+import reactor.core.publisher.Mono;
+
 import java.util.UUID;
 
 import notification.service.yowyob.inc.notification.application.domain.model.EmailSender;
@@ -22,48 +24,55 @@ public class ServiceAppService {
   private final SMSSenderRepository smsSenderRepository;
   private final WhatsappSenderRepository whatsappSenderRepository;
 
-  public ServiceCreateResponse registerServiceApp(ServiceCreateRequest request) {
-    // 1. Créer et sauvegarder le ServiceApp
+  public Mono<ServiceCreateResponse> registerServiceApp(ServiceCreateRequest request) {
     ServiceApp serviceAppToSave = new ServiceApp();
     serviceAppToSave.setName(request.getName());
     serviceAppToSave.setToken(UUID.randomUUID());
-    ServiceApp savedServiceApp = this.serviceAppRepository.save(serviceAppToSave);
 
-    // 2. Créer et sauvegarder EmailSender, lié au ServiceApp
-    EmailSender emailSender = new EmailSender();
-    emailSender.setServerHost(request.getEmailServerHost());
-    emailSender.setServerPort(request.getEmailServerPort());
-    emailSender.setUsername(request.getEmailUsername());
-    emailSender.setPassword(request.getEmailPassword());
-    emailSender.setServiceAppId(savedServiceApp.getServiceId());
-    this.emailSenderRepository.save(emailSender);
+    return serviceAppRepository.save(serviceAppToSave)
+        .flatMap(savedServiceApp -> {
+            Mono<EmailSender> emailSenderMono = emailSenderRepository.save(
+                EmailSender.builder()
+                    .serverHost(request.getEmailServerHost())
+                    .serverPort(request.getEmailServerPort())
+                    .username(request.getEmailUsername())
+                    .password(request.getEmailPassword())
+                    .serviceAppId(savedServiceApp.getServiceId())
+                    .build()
+            );
 
-    // 3. Créer et sauvegarder SMSSender, lié au ServiceApp
-    SMSSender smsSender = new SMSSender();
-    smsSender.setServerHost(request.getSmsServerHost());
-    smsSender.setServerPort(request.getSmsServerPort());
-    smsSender.setToken(request.getSmstoken());
-    smsSender.setServiceAppId(savedServiceApp.getServiceId());
-    this.smsSenderRepository.save(smsSender);
+            Mono<SMSSender> smsSenderMono = smsSenderRepository.save(
+                SMSSender.builder()
+                    .serverHost(request.getSmsServerHost())
+                    .serverPort(request.getSmsServerPort())
+                    .token(request.getSmstoken())
+                    .serviceAppId(savedServiceApp.getServiceId())
+                    .build()
+            );
 
-    // 4.Créer et sauvegarder le WhatsappSender, lié au ServiceApp
-    WhatsappSender whatsappSender = new WhatsappSender();
-    whatsappSender.setApiUrl(request.getWhatsappApiUrl());
-    whatsappSender.setApiTokenInstance(request.getWhatsappApiTokenInstance());
-    whatsappSender.setIdInstance(request.getWhatsappIdInstance());
-    whatsappSender.setServiceAppId(savedServiceApp.getServiceId());
-    this.whatsappSenderRepository.save(whatsappSender);
+            Mono<WhatsappSender> whatsappSenderMono = whatsappSenderRepository.save(
+                WhatsappSender.builder()
+                    .apiUrl(request.getWhatsappApiUrl())
+                    .apiTokenInstance(request.getWhatsappApiTokenInstance())
+                    .idInstance(request.getWhatsappIdInstance())
+                    .serviceAppId(savedServiceApp.getServiceId())
+                    .build()
+            );
 
-    // 5. Construire la réponse
-    ServiceCreateResponse response = new ServiceCreateResponse();
-    response.setServiceId(savedServiceApp.getServiceId());
-    response.setName(savedServiceApp.getName());
-    response.setToken(savedServiceApp.getToken().toString());
-    return response;
+            return Mono.when(emailSenderMono, smsSenderMono, whatsappSenderMono)
+                .thenReturn(savedServiceApp);
+        })
+        .map(savedServiceApp -> {
+            ServiceCreateResponse response = new ServiceCreateResponse();
+            response.setServiceId(savedServiceApp.getServiceId());
+            response.setName(savedServiceApp.getName());
+            response.setToken(savedServiceApp.getToken().toString());
+            return response;
+        });
   }
 
-  public ServiceApp getServiceAppByToken(String token) {
+  public Mono<ServiceApp> getServiceAppByToken(String token) {
     return this.serviceAppRepository.findByToken(UUID.fromString(token));
   }
-
 }
+

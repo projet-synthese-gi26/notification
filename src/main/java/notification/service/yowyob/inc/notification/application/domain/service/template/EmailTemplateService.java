@@ -1,16 +1,18 @@
 package notification.service.yowyob.inc.notification.application.domain.service.template;
 
 import lombok.AllArgsConstructor;
-import notification.service.yowyob.inc.notification.application.domain.model.ServiceApp;
 import notification.service.yowyob.inc.notification.application.domain.model.EmailTemplate;
+import notification.service.yowyob.inc.notification.application.domain.model.ServiceApp;
+import notification.service.yowyob.inc.notification.application.domain.model.Template;
 import notification.service.yowyob.inc.notification.application.domain.repository.EmailTemplateRepository;
 import notification.service.yowyob.inc.notification.application.port.input.dto.TemplateCreateRequest;
+import reactor.core.publisher.Mono;
 
 @AllArgsConstructor
 public class EmailTemplateService {
-  private EmailTemplateRepository emailTemplateRepository;
+  private final EmailTemplateRepository emailTemplateRepository;
 
-  public EmailTemplate createEmailTemplate(TemplateCreateRequest request, ServiceApp serviceApp) {
+  public Mono<Template> createEmailTemplate(TemplateCreateRequest request, ServiceApp serviceApp) {
     EmailTemplate template = new EmailTemplate();
 
     template.setName(request.getName());
@@ -20,6 +22,7 @@ public class EmailTemplateService {
     template.setBodyHtml(request.getBodyHtml());
     template.setServiceAppId(serviceApp.getServiceId());
 
-    return this.emailTemplateRepository.save(template);
+    return emailTemplateRepository.save(template)
+        .cast(Template.class);
   }
 }

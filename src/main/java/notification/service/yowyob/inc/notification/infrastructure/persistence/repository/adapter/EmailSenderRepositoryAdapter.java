@@ -8,8 +8,7 @@ import notification.service.yowyob.inc.notification.infrastructure.persistence.e
 import notification.service.yowyob.inc.notification.infrastructure.persistence.repository.EmailSenderEntityRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
-
-import java.util.NoSuchElementException;
+import reactor.core.publisher.Mono;
 
 @Component
 @AllArgsConstructor
@@ -19,18 +18,16 @@ public class EmailSenderRepositoryAdapter implements EmailSenderRepository {
   private final ModelMapper modelMapper;
 
   @Override
-  public EmailSender save(EmailSender emailSender) {
+  public Mono<EmailSender> save(EmailSender emailSender) {
     EmailSenderEntity entity = toEntity(emailSender);
-    return modelMapper.map(
-        emailSenderEntityRepository.save(entity).block(), EmailSender.class);
+    return emailSenderEntityRepository.save(entity)
+        .map(this::toDomainObject);
   }
 
   @Override
-  public EmailSender findByServiceApp(ServiceApp serviceApp) {
+  public Mono<EmailSender> findByServiceApp(ServiceApp serviceApp) {
     return emailSenderEntityRepository.findByServiceAppId(serviceApp.getServiceId())
-        .map(this::toDomainObject).blockOptional()
-        .orElseThrow(
-            () -> new NoSuchElementException("EmailSender not found for the given service app"));
+        .map(this::toDomainObject);
   }
 
   private EmailSender toDomainObject(EmailSenderEntity entity) {

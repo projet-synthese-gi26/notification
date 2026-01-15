@@ -4,7 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 import notification.service.yowyob.inc.notification.application.domain.model.ServiceApp;
+import reactor.core.publisher.Mono;
 
 public interface SenderStrategy {
-  public void execute(ServiceApp serviceApp, int templateId, List<String> to, Map<String, String> data);
+  Mono<Void> execute(ServiceApp serviceApp, int templateId, List<String> to, Map<String, String> data);
 }
