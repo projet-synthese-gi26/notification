@@ -9,9 +9,9 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class Template {
-  private Integer templateId;
-  private Integer serviceAppId;
-  private String name;
-  private String description;
+public class PushTemplate extends Template {
+  private String title;
+  private String body;
+  private String imageUrl; // Optional image URL for the push notification
+  private String clickAction; // Action to perform when the notification is clicked
 }

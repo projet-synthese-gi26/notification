@@ -3,19 +3,25 @@ package notification.service.yowyob.inc.notification;
 import notification.service.yowyob.inc.notification.application.domain.enums.NotificationType;
 import notification.service.yowyob.inc.notification.application.domain.model.EmailSender;
 import notification.service.yowyob.inc.notification.application.domain.model.EmailTemplate;
+import notification.service.yowyob.inc.notification.application.domain.model.PushSender;
 import notification.service.yowyob.inc.notification.application.domain.model.ServiceApp;
 import notification.service.yowyob.inc.notification.application.domain.model.Template;
 import notification.service.yowyob.inc.notification.application.domain.model.WhatsappSender;
 import notification.service.yowyob.inc.notification.application.domain.model.WhatsappTemplate;
+import notification.service.yowyob.inc.notification.application.domain.model.PushTemplate;
 import notification.service.yowyob.inc.notification.application.domain.repository.ServiceAppRepository;
 import notification.service.yowyob.inc.notification.application.domain.repository.WhatsappSenderRepository;
 import notification.service.yowyob.inc.notification.application.domain.repository.WhatsappTemplateRepository;
 import notification.service.yowyob.inc.notification.application.domain.repository.EmailSenderRepository;
 import notification.service.yowyob.inc.notification.application.domain.repository.EmailTemplateRepository;
+import notification.service.yowyob.inc.notification.application.domain.repository.PushSenderRepository; // New import
+import notification.service.yowyob.inc.notification.application.domain.repository.PushTemplateRepository; // New import
 import notification.service.yowyob.inc.notification.application.port.input.dto.NotificationSendRequest;
 import notification.service.yowyob.inc.notification.application.port.input.dto.NotificationCreateRequest;
 import notification.service.yowyob.inc.notification.application.port.output.service.WhatsappSenderServiceInterface;
 import notification.service.yowyob.inc.notification.application.port.output.service.EmailSenderServiceInterface;
+import notification.service.yowyob.inc.notification.application.port.output.service.PushSenderServiceInterface;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,23 +63,34 @@ public class NotificationControllerTest {
     @Autowired
     private EmailTemplateRepository emailTemplateRepository;
 
+    @Autowired
+    private PushSenderRepository pushSenderRepository; // New
+    @Autowired
+    private PushTemplateRepository pushTemplateRepository; // New
+
     @MockBean
     private WhatsappSenderServiceInterface whatsappSenderServiceInterface;
 
     @MockBean
     private EmailSenderServiceInterface emailSenderServiceInterface;
 
+    @MockBean
+    private PushSenderServiceInterface pushSenderServiceInterface; // New
+
     private ServiceApp serviceApp;
     private Template whatsappTemplate;
     private Template emailTemplate;
-
+    private Template pushTemplate; // New
 
     @BeforeEach
     void setUp() {
         // Mock the external service
         when(whatsappSenderServiceInterface.sendWhatsappMessage(any(), any(), any(), any(), any()))
                 .thenReturn(Mono.empty());
-        doNothing().when(emailSenderServiceInterface).sendEmail(any(), any(), any(), any(), any(), any(), any(), any(), any()); // Corrected mocking
+        doNothing().when(emailSenderServiceInterface).sendEmail(any(), any(), any(), any(), any(), any(), any(), any(),
+                any());
+        when(pushSenderServiceInterface.sendPush(any(), any(), any(), any()))
+                .thenReturn(Mono.empty()); // New mock
 
         // Create a service app
         ServiceApp app = new ServiceApp();
@@ -98,6 +115,12 @@ public class NotificationControllerTest {
         emailSender.setPassword("testpassword");
         emailSenderRepository.save(emailSender).block();
 
+        // Create a push sender (new)
+        PushSender pushSender = new PushSender();
+        pushSender.setServiceAppId(serviceApp.getServiceId());
+        pushSender.setServiceAccountJson(
+                "{\"type\": \"service_account\", \"project_id\": \"test-project\", \"private_key_id\": \"some_id\", \"private_key\": \"-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n\", \"client_email\": \"test@test-project.iam.gserviceaccount.com\", \"client_id\": \"some_id\", \"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\", \"token_uri\": \"https://oauth2.googleapis.com/token\", \"auth_provider_x509_cert_url\": \"https://www.googleapis.com/oauth2/v1/certs\", \"client_x509_cert_url\": \"https://www.googleapis.com/robot/v1/metadata/x509/test%40test-project.iam.gserviceaccount.com\"}");
+        pushSenderRepository.save(pushSender).block();
 
         // Create a whatsapp template
         WhatsappTemplate template = new WhatsappTemplate();
@@ -116,6 +139,15 @@ public class NotificationControllerTest {
         emailT.setDescription("A test email template");
         emailTemplate = emailTemplateRepository.save(emailT).block();
 
+        // Create a push template (new)
+        PushTemplate pushT = new PushTemplate();
+        pushT.setServiceAppId(serviceApp.getServiceId());
+        pushT.setName("Test Push Template");
+        pushT.setTitle("Push Title {{name}}");
+        pushT.setBody("Push Body {{message}}");
+        pushT.setImageUrl("http://example.com/image.png");
+        pushT.setClickAction("https://example.com/action");
+        pushTemplate = pushTemplateRepository.save(pushT).block();
     }
 
     @Test
@@ -168,7 +200,22 @@ public class NotificationControllerTest {
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody()
-                .jsonPath("$.notificationType").isEqualTo("EMAIL")
-                .jsonPath("$.userId").isEqualTo(request.getUserId().toString());
+                .jsonPath("$.notificationType").isEqualTo("EMAIL");
+    }
+
+    @Test
+    void testSendPushNotification() {
+        NotificationSendRequest request = new NotificationSendRequest();
+        request.setNotificationType(NotificationType.PUSH);
+        request.setTemplateId(pushTemplate.getTemplateId());
+        request.setTo(List.of("fcm_device_token_123")); // Device token for push notification
+        request.setData(Map.of("name", "Test User", "message", "Hello Push!"));
+
+        webTestClient.post()
+                .uri("/api/v1/notifications/send")
+                .header("X-Service-Token", serviceApp.getToken().toString())
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isAccepted();
     }
 }

@@ -31,7 +31,7 @@ This service provides a centralized solution for managing and sending notificati
 
 ### Key Features
 
-- **Multi-channel Notifications**: Send notifications via Email, SMS, WhatsApp, and Pull channels.
+- **Multi-channel Notifications**: Send notifications via Email, SMS, WhatsApp, Push and Pull channels.
 - **Service Registration**: Onboard new applications/services to use the notification system. Each registered service gets a unique token for API access.
 - **Template Engine**: Create and manage notification templates to standardize communication.
 - **Asynchronous by Default**: Operations are processed asynchronously via a Kafka message queue, ensuring high throughput.
@@ -71,6 +71,7 @@ The application follows a standard Hexagonal Architecture pattern.
 - **Maven 3.9+**: For building the project.
 - **Docker & Docker Compose**: For running the application and its dependencies (Kafka, PostgreSQL).
 - **Active Kafka & PostgreSQL instances**.
+- **Firebase project**: for push notification, you need a Firebase project and the associated private key.
 
 ### Installation
 
@@ -141,7 +142,7 @@ sequenceDiagram
 
 ### Step 2: Providing Notification Templates
 
-Once your application is onboarded, you can define reusable templates for different notification types (Email, SMS, WhatsApp, Pull). These templates standardize your messages and simplify sending. For detailed instructions and examples, refer to the [Template Management](#2-template-management) section in the REST API Documentation.
+Once your application is onboarded, you can define reusable templates for different notification types (Email, SMS, WhatsApp, Push, Pull). These templates standardize your messages and simplify sending. For detailed instructions and examples, refer to the [Template Management](#2-template-management) section in the REST API Documentation.
 
 ```mermaid
 sequenceDiagram
@@ -161,9 +162,9 @@ sequenceDiagram
     Database-->>NotificationService: Confirmation
     NotificationService-->>YourApp: 200 OK + Confirmation
 
-    YourApp->>NotificationService: POST /api/v1/templates (Create SMS/Pull Template)
+    YourApp->>NotificationService: POST /api/v1/templates (Create SMS/Push/Pull Template)
     Note over NotificationService: Uses X-Service-Token
-    NotificationService->>Database: Store SMSTemplate/PullTemplate Details
+    NotificationService->>Database: Store SMSTemplate/PushTemplate/PullTemplate Details
     Database-->>NotificationService: Confirmation
     NotificationService-->>YourApp: 200 OK + Confirmation
 ```
@@ -180,7 +181,7 @@ For immediate, direct notification sending. Refer to the [POST /api/v1/notificat
 sequenceDiagram
     participant YourApp as Your Application
     participant NotificationService as Notification Service
-    participant ExternalService as External Sender (Email/SMS/WhatsApp)
+    participant ExternalService as External Sender (Email/SMS/WhatsApp/Push)
 
     YourApp->>NotificationService: POST /api/v1/notifications/send (Send Notification Request)
     Note over NotificationService: Uses X-Service-Token & TemplateId
@@ -215,7 +216,7 @@ sequenceDiagram
     participant YourApp as Your Application
     participant Kafka as Apache Kafka
     participant NotificationService as Notification Service
-    participant ExternalService as External Sender (Email/SMS/WhatsApp)
+    participant ExternalService as External Sender (Email/SMS/WhatsApp/Push)
 
     YourApp->>Kafka: Publish to notification-send-topic (Notification Message)
     Note over Kafka: Includes X-Service-Token & TemplateId
@@ -289,7 +290,8 @@ Registers a new service application. This is the first step to using the notific
     "smstoken": "your-sms-provider-token",
     "whatsappApiUrl": "https://715.api.greenapi.com/",
     "whatsappIdInstance": "your-instance-id",
-    "whatsappApiTokenInstance": "your-api-token"
+    "whatsappApiTokenInstance": "your-api-token",
+    "firebaseServiceAccountJson": "{\"type\": \"service_account\", ...}"
   }
   ```
 
@@ -318,7 +320,8 @@ Registers a new service application. This is the first step to using the notific
     "smstoken": "your-sms-provider-token",
     "whatsappApiUrl": "https://715.api.greenapi.com/",
     "whatsappIdInstance": "your-instance-id",
-    "whatsappApiTokenInstance": "your-api-token"
+    "whatsappApiTokenInstance": "your-api-token",
+    "firebaseServiceAccountJson": "{\"type\": \"service_account\", ...}"
   }'
   ```
 
@@ -362,9 +365,22 @@ Creates a new notification template for a registered service.
     "type": "WHATSAPP"
   }
   ```
+  
+  Or for PUSH:
 
-  - `type` can be `EMAIL`, `SMS`, `WHATSAPP`, or `PULL` (for pull/push notifications).
-  - `message` is used for SMS and PULL. `body` is used for WHATSAPP. `subject` and `bodyHtml` are for EMAIL.
+  ```json
+  {
+    "templateId": 103,
+    "name": "New Order Push Notification",
+    "description": "Template for new order push notifications.",
+    "title": "New Order Received!",
+    "body": "You have a new order from {{customerName}}.",
+    "type": "PUSH"
+  }
+  ```
+
+  - `type` can be `EMAIL`, `SMS`, `WHATSAPP`, `PUSH` or `PULL`.
+  - `message` is used for SMS and PULL. `body` is used for WHATSAPP and PUSH. `title` is used for PUSH. `subject` and `bodyHtml` are for EMAIL.
 
 - **Response (200 OK)**:
 
@@ -400,6 +416,20 @@ Creates a new notification template for a registered service.
     "description": "Template for WhatsApp order confirmation.",
     "body": "Hello {{customerName}}, your order {{orderId}} has been confirmed!",
     "type": "WHATSAPP"
+  }'
+  ```
+  Or for PUSH:
+  ```bash
+  curl -X POST 'http://localhost:8080/api/v1/templates' \
+  -H 'Content-Type: application/json' \
+  -H 'X-Service-Token: <your-service-token>' \
+  -d '{
+    "templateId": 103,
+    "name": "New Order Push Notification",
+    "description": "Template for new order push notifications.",
+    "title": "New Order Received!",
+    "body": "You have a new order from {{customerName}}.",
+    "type": "PUSH"
   }'
   ```
 
@@ -444,6 +474,19 @@ Creates a notification without sending it immediately. This is useful for schedu
     }
   }
   ```
+  
+  Or for PUSH:
+  
+  ```json
+  {
+    "notificationType": "PUSH",
+    "templateId": 103,
+    "userId": "a-user-uuid-if-exists",
+    "data": {
+      "customerName": "Jane Doe"
+    }
+  }
+  ```
 
   - `data` contains key-value pairs to replace variables in the template (e.g., `{{userName}}`).
 
@@ -481,6 +524,21 @@ Creates a notification without sending it immediately. This is useful for schedu
     "data": {
       "customerName": "Jane Doe",
       "orderId": "XYZ-123"
+    }
+  }'
+  ```
+  
+  Or for PUSH:
+  ```bash
+  curl -X POST 'http://localhost:8080/api/v1/notifications' \
+  -H 'Content-Type: application/json' \
+  -H 'X-Service-Token: <your-service-token>' \
+  -d '{
+    "notificationType": "PUSH",
+    "templateId": 103,
+    "userId": "a-user-uuid-if-exists",
+    "data": {
+      "customerName": "Jane Doe"
     }
   }'
   ```
@@ -522,8 +580,21 @@ Sends a notification immediately to a specified recipient.
     }
   }
   ```
+  
+  Or for PUSH:
+  
+  ```json
+  {
+    "notificationType": "PUSH",
+    "templateId": 103,
+    "to": ["<device-token>"],
+    "data": {
+      "customerName": "Jane Doe"
+    }
+  }
+  ```
 
-  - `to` is the recipient's address (e.g., email address, phone number).
+  - `to` is the recipient's address (e.g., email address, phone number, device token).
 
 - **Response (200 OK)**:
 
@@ -562,6 +633,21 @@ Sends a notification immediately to a specified recipient.
     }
   }'
   ```
+  
+  Or for PUSH:
+  ```bash
+  curl -X POST 'http://localhost:8080/api/v1/notifications/send' \
+  -H 'Content-Type: application/json' \
+  -H 'X-Service-Token: <your-service-token>' \
+  -d '{
+    "notificationType": "PUSH",
+    "templateId": 103,
+    "to": ["<your-device-token>"],
+    "data": {
+      "customerName": "Jane Doe"
+    }
+  }'
+  ```
 
 ---
 
@@ -595,6 +681,16 @@ You can trigger notification creation and sending by publishing messages to the 
     "data": { "customerName": "Jane Kafka", "orderId": "XYZ-456" }
   }
   ```
+  
+  Or for PUSH:
+  ```json
+  {
+    "notificationType": "PUSH",
+    "templateId": 103,
+    "userId": "some-user-uuid",
+    "data": { "customerName": "Jane Kafka" }
+  }
+  ```
 
 ### 2. Send a Notification
 
@@ -618,6 +714,16 @@ You can trigger notification creation and sending by publishing messages to the 
     "templateId": 102,
     "to": ["1234567890"],
     "data": { "customerName": "Jane Kafka", "orderId": "XYZ-789" }
+  }
+  ```
+  
+  Or for PUSH:
+  ```json
+  {
+    "notificationType": "PUSH",
+    "templateId": 103,
+    "to": ["<your-device-token>"],
+    "data": { "customerName": "Jane Kafka" }
   }
   ```
 

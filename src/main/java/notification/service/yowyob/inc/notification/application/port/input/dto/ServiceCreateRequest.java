@@ -21,4 +21,7 @@ public class ServiceCreateRequest {
   private String whatsappApiUrl;
   private String whatsappIdInstance;
   private String whatsappApiTokenInstance;
+
+  // Firebase Push Notification
+  private String firebaseServiceAccountJson;
 }

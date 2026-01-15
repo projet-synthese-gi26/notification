@@ -13,6 +13,8 @@ import notification.service.yowyob.inc.notification.application.domain.repositor
 import notification.service.yowyob.inc.notification.application.domain.repository.SMSSenderRepository;
 import notification.service.yowyob.inc.notification.application.domain.repository.ServiceAppRepository;
 import notification.service.yowyob.inc.notification.application.domain.repository.WhatsappSenderRepository;
+import notification.service.yowyob.inc.notification.application.domain.repository.PushSenderRepository;
+import notification.service.yowyob.inc.notification.application.domain.model.PushSender;
 import notification.service.yowyob.inc.notification.application.port.input.dto.ServiceCreateRequest;
 import notification.service.yowyob.inc.notification.application.port.output.dto.ServiceCreateResponse;
 
@@ -23,6 +25,7 @@ public class ServiceAppService {
   private final EmailSenderRepository emailSenderRepository;
   private final SMSSenderRepository smsSenderRepository;
   private final WhatsappSenderRepository whatsappSenderRepository;
+  private final PushSenderRepository pushSenderRepository; // New dependency
 
   public Mono<ServiceCreateResponse> registerServiceApp(ServiceCreateRequest request) {
     ServiceApp serviceAppToSave = new ServiceApp();
@@ -59,7 +62,14 @@ public class ServiceAppService {
                     .build()
             );
 
-            return Mono.when(emailSenderMono, smsSenderMono, whatsappSenderMono)
+            Mono<PushSender> pushSenderMono = pushSenderRepository.save( // New PushSender creation
+                PushSender.builder()
+                    .serviceAccountJson(request.getFirebaseServiceAccountJson())
+                    .serviceAppId(savedServiceApp.getServiceId())
+                    .build()
+            );
+
+            return Mono.when(emailSenderMono, smsSenderMono, whatsappSenderMono, pushSenderMono) // Added pushSenderMono
                 .thenReturn(savedServiceApp);
         })
         .map(savedServiceApp -> {

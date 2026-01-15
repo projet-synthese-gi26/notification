@@ -78,3 +78,22 @@ CREATE TABLE IF NOT EXISTS notification (
 );
 
 -- NOTE: Les tables pour sms_template et pull_template peuvent être ajoutées sur le même modèle.
+
+-- Table pour les configurations d'envoi de Push
+CREATE TABLE IF NOT EXISTS push_sender (
+    push_sender_id SERIAL PRIMARY KEY,
+    service_account_json TEXT NOT NULL,
+    service_app_id INTEGER REFERENCES service_app(service_id)
+);
+
+-- Table pour les templates de Push
+CREATE TABLE IF NOT EXISTS push_template (
+    template_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    title VARCHAR(255),
+    body TEXT,
+    image_url VARCHAR(255),
+    click_action TEXT,
+    service_app_id INTEGER REFERENCES service_app(service_id)
+);

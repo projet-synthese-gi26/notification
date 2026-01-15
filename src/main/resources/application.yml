@@ -18,7 +18,7 @@ spring:
     init:
       mode: always # always | embedded | never
   kafka:
-    bootstrap-servers: 168.119.122.86:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:168.119.122.86:9092}
     consumer:
       group-id: notification_group_id
       auto-offset-reset: earliest

@@ -1,17 +1,16 @@
 package notification.service.yowyob.inc.notification.application.domain.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
 @Data
-@SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class Template {
-  private Integer templateId;
+public class PushSender {
+  private Integer pushSenderId;
   private Integer serviceAppId;
-  private String name;
-  private String description;
+  private String serviceAccountJson;
 }

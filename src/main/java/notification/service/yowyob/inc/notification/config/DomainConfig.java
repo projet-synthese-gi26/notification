@@ -5,6 +5,7 @@ import notification.service.yowyob.inc.notification.application.domain.repositor
 import notification.service.yowyob.inc.notification.application.domain.service.*;
 import notification.service.yowyob.inc.notification.application.domain.service.sender.ContextSenderStrategy;
 import notification.service.yowyob.inc.notification.application.domain.service.sender.EmailSenderService;
+import notification.service.yowyob.inc.notification.application.domain.service.sender.PushSenderService;
 import notification.service.yowyob.inc.notification.application.domain.service.sender.SMSSenderService;
 import notification.service.yowyob.inc.notification.application.domain.service.sender.SenderStrategy;
 import notification.service.yowyob.inc.notification.application.domain.service.sender.WhatsappSenderService;
@@ -14,6 +15,7 @@ import notification.service.yowyob.inc.notification.application.domain.service.t
 import notification.service.yowyob.inc.notification.application.domain.service.template.TemplateFactory;
 import notification.service.yowyob.inc.notification.application.domain.service.template.WhatsappTemplateService;
 import notification.service.yowyob.inc.notification.application.port.output.service.EmailSenderServiceInterface;
+import notification.service.yowyob.inc.notification.application.port.output.service.PushSenderServiceInterface;
 import notification.service.yowyob.inc.notification.application.port.output.service.WhatsappSenderServiceInterface;
 
 import org.springframework.context.annotation.Bean;
@@ -29,9 +31,10 @@ public class DomainConfig {
       ServiceAppRepository serviceAppRepository,
       EmailSenderRepository emailSenderRepository,
       SMSSenderRepository smsSenderRepository,
-      WhatsappSenderRepository whatsappSenderRepository) {
+      WhatsappSenderRepository whatsappSenderRepository,
+      PushSenderRepository pushSenderRepository) { // New dependency
     return new ServiceAppService(serviceAppRepository, emailSenderRepository, smsSenderRepository,
-        whatsappSenderRepository);
+        whatsappSenderRepository, pushSenderRepository); // Added pushSenderRepository
   }
 
   @Bean
@@ -51,19 +54,28 @@ public class DomainConfig {
   public WhatsappSenderService whatsappSenderService(WhatsappTemplateRepository whatsappTemplateRepository,
       WhatsappSenderServiceInterface whatsappSenderServiceInterface,
       WhatsappSenderRepository whatsappSenderRepository) {
-    // Ajoutez les dépendances si nécessaire
     return new WhatsappSenderService(whatsappTemplateRepository, whatsappSenderServiceInterface,
         whatsappSenderRepository);
   }
 
   @Bean
+  public PushSenderService pushSenderService( // New PushSenderService bean
+      PushTemplateRepository pushTemplateRepository,
+      PushSenderRepository pushSenderRepository,
+      PushSenderServiceInterface pushSenderServiceInterface) {
+    return new PushSenderService(pushTemplateRepository, pushSenderRepository, pushSenderServiceInterface);
+  }
+
+  @Bean
   public ContextSenderStrategy contextSenderStrategy(EmailSenderService emailSenderService,
                                                      SMSSenderService smsSenderService,
-                                                     WhatsappSenderService whatsappSenderService) {
+                                                     WhatsappSenderService whatsappSenderService,
+                                                     PushSenderService pushSenderService) { // Added pushSenderService
     Map<NotificationType, SenderStrategy> strategyMap = Map.of(
         NotificationType.EMAIL, emailSenderService,
         NotificationType.SMS, smsSenderService,
-        NotificationType.WHATSAPP, whatsappSenderService);
+        NotificationType.WHATSAPP, whatsappSenderService,
+        NotificationType.PUSH, pushSenderService); // Added PUSH strategy
 
     return new ContextSenderStrategy(strategyMap);
   }

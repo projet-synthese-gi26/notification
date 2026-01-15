@@ -1,13 +1,4 @@
--- Supprime les tables si elles existent pour un redémarrage propre en développement
-DROP TABLE IF EXISTS notification;
-DROP TABLE IF EXISTS email_template;
-DROP TABLE IF EXISTS sms_template;
-DROP TABLE IF EXISTS pull_template;
-DROP TABLE IF EXISTS whatsapp_template;
-DROP TABLE IF EXISTS email_sender;
-DROP TABLE IF EXISTS sms_sender;
-DROP TABLE IF EXISTS whatsapp_sender;
-DROP TABLE IF EXISTS service_app;
+DROP ALL OBJECTS;
 
 
 -- Table pour les applications de service
@@ -98,6 +89,27 @@ CREATE TABLE pull_template (
     name VARCHAR(255) NOT NULL,
     description TEXT,
     message TEXT,
+    service_app_id INT,
+    FOREIGN KEY (service_app_id) REFERENCES service_app(service_id)
+);
+
+-- Table pour les configurations d'envoi de Push
+CREATE TABLE push_sender (
+    push_sender_id INT AUTO_INCREMENT PRIMARY KEY,
+    service_account_json TEXT NOT NULL,
+    service_app_id INT,
+    FOREIGN KEY (service_app_id) REFERENCES service_app(service_id)
+);
+
+-- Table pour les templates de Push
+CREATE TABLE push_template (
+    template_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    title VARCHAR(255),
+    body TEXT,
+    image_url VARCHAR(255),
+    click_action TEXT,
     service_app_id INT,
     FOREIGN KEY (service_app_id) REFERENCES service_app(service_id)
 );
