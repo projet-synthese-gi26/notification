@@ -1,4 +1,4 @@
-package notification.service.yowyob.inc.notification.application.domain.service;
+package notification.service.yowyob.inc.notification.application.domain.service.template;
 
 import lombok.AllArgsConstructor;
 import notification.service.yowyob.inc.notification.application.domain.model.ServiceApp;

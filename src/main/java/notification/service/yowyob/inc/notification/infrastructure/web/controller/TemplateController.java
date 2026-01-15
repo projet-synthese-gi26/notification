@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import notification.service.yowyob.inc.notification.application.domain.model.Template;
-import notification.service.yowyob.inc.notification.application.domain.service.TemplateFactory;
+import notification.service.yowyob.inc.notification.application.domain.service.template.TemplateFactory;
 import notification.service.yowyob.inc.notification.application.port.input.dto.TemplateCreateRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package notification.service.yowyob.inc.notification.application.domain.service;
+package notification.service.yowyob.inc.notification.application.domain.service.sender;
 
 import java.util.List;
 import java.util.Map;

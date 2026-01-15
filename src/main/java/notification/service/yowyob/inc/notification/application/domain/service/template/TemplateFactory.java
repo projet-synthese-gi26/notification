@@ -1,9 +1,10 @@
-package notification.service.yowyob.inc.notification.application.domain.service;
+package notification.service.yowyob.inc.notification.application.domain.service.template;
 
 import lombok.AllArgsConstructor;
 import notification.service.yowyob.inc.notification.application.domain.enums.NotificationType;
 import notification.service.yowyob.inc.notification.application.domain.model.ServiceApp;
 import notification.service.yowyob.inc.notification.application.domain.model.Template;
+import notification.service.yowyob.inc.notification.application.domain.service.ServiceAppService;
 import notification.service.yowyob.inc.notification.application.port.input.dto.TemplateCreateRequest;
 
 @AllArgsConstructor

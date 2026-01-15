@@ -3,6 +3,14 @@ package notification.service.yowyob.inc.notification.config;
 import notification.service.yowyob.inc.notification.application.domain.enums.NotificationType;
 import notification.service.yowyob.inc.notification.application.domain.repository.*;
 import notification.service.yowyob.inc.notification.application.domain.service.*;
+import notification.service.yowyob.inc.notification.application.domain.service.sender.ContextSenderStrategy;
+import notification.service.yowyob.inc.notification.application.domain.service.sender.EmailSenderService;
+import notification.service.yowyob.inc.notification.application.domain.service.sender.SMSSenderService;
+import notification.service.yowyob.inc.notification.application.domain.service.sender.SenderStrategy;
+import notification.service.yowyob.inc.notification.application.domain.service.template.EmailTemplateService;
+import notification.service.yowyob.inc.notification.application.domain.service.template.PullTemplateService;
+import notification.service.yowyob.inc.notification.application.domain.service.template.SMSTemplateService;
+import notification.service.yowyob.inc.notification.application.domain.service.template.TemplateFactory;
 import notification.service.yowyob.inc.notification.application.port.output.service.EmailSenderServiceInterface;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,7 +49,7 @@ public class DomainConfig {
     Map<NotificationType, SenderStrategy> strategyMap = Map.of(
         NotificationType.EMAIL, senderStrategies.get("emailSenderService"),
         NotificationType.SMS, senderStrategies.get("smsSenderService")
-        // Ajoutez PULL ici si vous avez un service pour cela
+    // Ajoutez PULL ici si vous avez un service pour cela
     );
 
     return new ContextSenderStrategy(strategyMap);
