@@ -4,4 +4,6 @@ import notification.service.yowyob.inc.notification.application.domain.model.SMS
 
 public interface SMSSenderRepository {
   public SMSSender save(SMSSender smsSender);
+
+  // public SMSSender update(SMSSender smsSender);
 }

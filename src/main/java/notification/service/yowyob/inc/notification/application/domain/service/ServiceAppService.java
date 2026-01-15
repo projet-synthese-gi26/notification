@@ -6,9 +6,11 @@ import java.util.UUID;
 import notification.service.yowyob.inc.notification.application.domain.model.EmailSender;
 import notification.service.yowyob.inc.notification.application.domain.model.SMSSender;
 import notification.service.yowyob.inc.notification.application.domain.model.ServiceApp;
+import notification.service.yowyob.inc.notification.application.domain.model.WhatsappSender;
 import notification.service.yowyob.inc.notification.application.domain.repository.EmailSenderRepository;
 import notification.service.yowyob.inc.notification.application.domain.repository.SMSSenderRepository;
 import notification.service.yowyob.inc.notification.application.domain.repository.ServiceAppRepository;
+import notification.service.yowyob.inc.notification.application.domain.repository.WhatsappSenderRepository;
 import notification.service.yowyob.inc.notification.application.port.input.dto.ServiceCreateRequest;
 import notification.service.yowyob.inc.notification.application.port.output.dto.ServiceCreateResponse;
 
@@ -18,6 +20,7 @@ public class ServiceAppService {
   private final ServiceAppRepository serviceAppRepository;
   private final EmailSenderRepository emailSenderRepository;
   private final SMSSenderRepository smsSenderRepository;
+  private final WhatsappSenderRepository whatsappSenderRepository;
 
   public ServiceCreateResponse registerServiceApp(ServiceCreateRequest request) {
     // 1. Créer et sauvegarder le ServiceApp
@@ -43,7 +46,15 @@ public class ServiceAppService {
     smsSender.setServiceAppId(savedServiceApp.getServiceId());
     this.smsSenderRepository.save(smsSender);
 
-    // 4. Construire la réponse
+    // 4.Créer et sauvegarder le WhatsappSender, lié au ServiceApp
+    WhatsappSender whatsappSender = new WhatsappSender();
+    whatsappSender.setApiUrl(request.getWhatsappApiUrl());
+    whatsappSender.setApiTokenInstance(request.getWhatsappApiTokenInstance());
+    whatsappSender.setIdInstance(request.getWhatsappIdInstance());
+    whatsappSender.setServiceAppId(savedServiceApp.getServiceId());
+    this.whatsappSenderRepository.save(whatsappSender);
+
+    // 5. Construire la réponse
     ServiceCreateResponse response = new ServiceCreateResponse();
     response.setServiceId(savedServiceApp.getServiceId());
     response.setName(savedServiceApp.getName());

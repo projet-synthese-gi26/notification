@@ -13,4 +13,7 @@ public class TemplateCreateRequest {
   private String subject;
   private String bodyHtml;
   NotificationType type;
+
+  // For Whatsapp
+  private String body;
 }

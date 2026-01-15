@@ -6,6 +6,8 @@ import notification.service.yowyob.inc.notification.application.domain.model.Ser
 public interface EmailSenderRepository {
   public EmailSender save(EmailSender emailSender);
 
+  // public EmailSender update(EmailSender emailSender);
+
   public EmailSender findByServiceApp(ServiceApp serviceApp);
 
 }

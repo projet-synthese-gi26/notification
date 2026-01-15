@@ -16,4 +16,9 @@ public class ServiceCreateRequest {
   private String smsServerHost;
   private String smsServerPort;
   private String smstoken;
+
+  // Whatsapp
+  private String whatsappApiUrl;
+  private String whatsappIdInstance;
+  private String whatsappApiTokenInstance;
 }

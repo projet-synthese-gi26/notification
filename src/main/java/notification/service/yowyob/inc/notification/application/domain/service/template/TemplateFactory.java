@@ -13,6 +13,7 @@ public class TemplateFactory {
   private final EmailTemplateService emailTemplateService;
   private final PullTemplateService pullTemplateService;
   private final ServiceAppService serviceAppService;
+  private final WhatsappTemplateService whatsappTemplateService;
 
   public Template createTemplate(String token, TemplateCreateRequest request) {
     ServiceApp serviceApp = this.serviceAppService.getServiceAppByToken(token);
@@ -25,6 +26,8 @@ public class TemplateFactory {
       template = this.templateService.createSMSTemplate(request, serviceApp);
     } else if (request.getType() == NotificationType.PULL) {
       template = this.pullTemplateService.createPullTemplate(request, serviceApp);
+    } else if (request.getType() == NotificationType.WHATSAPP) {
+      template = this.whatsappTemplateService.createWhatsappTemplate(request, serviceApp);
     }
 
     return template;
