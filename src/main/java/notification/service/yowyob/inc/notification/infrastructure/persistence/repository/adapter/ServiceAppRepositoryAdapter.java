@@ -31,6 +31,12 @@ public class ServiceAppRepositoryAdapter implements ServiceAppRepository {
         .map(this::toDomainObject);
   }
 
+  @Override
+  public Mono<ServiceApp> findById(Integer id) {
+    return serviceAppEntityRepository.findById(id)
+        .map(this::toDomainObject);
+  }
+
   private ServiceApp toDomainObject(ServiceAppEntity entity) {
     return modelMapper.map(entity, ServiceApp.class);
   }

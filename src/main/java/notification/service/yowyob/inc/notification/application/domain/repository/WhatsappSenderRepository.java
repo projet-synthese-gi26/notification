@@ -9,5 +9,5 @@ public interface WhatsappSenderRepository {
 
   Mono<WhatsappSender> findByServiceApp(ServiceApp serviceApp);
 
-  // public WhatsappSender update(WhatsappSender whatsappSender);
+  Mono<WhatsappSender> findByServiceAppId(Integer serviceAppId);
 }

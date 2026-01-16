@@ -325,6 +325,91 @@ Registers a new service application. This is the first step to using the notific
   }'
   ```
 
+#### PATCH `/api/v1/services`
+
+Updates specific sender configurations for a registered service application. This endpoint allows for partial updates, meaning you only send the fields you wish to change for one or more sender types.
+
+- **Method**: `PATCH`
+- **URL**: `/api/v1/services/{serviceAppId}`
+- **Headers**:
+  - `Content-Type: application/json`
+  - `X-Service-Token: <your-service-token>` **(Required)**
+
+- **Request Body Examples**:
+
+  **Updating Email Sender Configuration**:
+  ```json
+  {
+    "emailSender": {
+      "serverHost": "new.smtp.server.com",
+      "username": "newuser@example.com",
+      "password": "new-smtp-password"
+    }
+  }
+  ```
+
+  **Updating SMS Sender Configuration**:
+  ```json
+  {
+    "smsSender": {
+      "serverHost": "new.sms.provider.com",
+      "token": "new-sms-token"
+    }
+  }
+  ```
+
+  **Updating Push Sender Configuration**:
+  ```json
+  {
+    "pushSender": {
+      "serviceAccountJson": "{\"type\": \"new_service_account\", ...}"
+    }
+  }
+  ```
+
+  **Updating WhatsApp Sender Configuration**:
+  ```json
+  {
+    "whatsappSender": {
+      "apiUrl": "https://new.api.whatsapp.com/",
+      "idInstance": "new-whatsapp-instance-id",
+      "apiTokenInstance": "new-whatsapp-api-token"
+    }
+  }
+  ```
+  **Simultaneous Update (Example)**:
+  You can update multiple sender types in a single request:
+  ```json
+  {
+    "emailSender": {
+      "serverHost": "another.smtp.server.com"
+    },
+    "smsSender": {
+      "serverHost": "another.sms.provider.com",
+      "serverPort": "9090"
+    }
+  }
+  ```
+  Only the fields provided in the request body for each sender type will be updated. Other fields and sender types not included in the request will remain unchanged.
+
+- **Response (204 No Content)**:
+  No content is returned upon successful update.
+
+- **cURL Example (Updating Email Sender)**:
+  ```bash
+  curl -X PATCH 'http://localhost:8080/api/v1/services' \
+  -H 'Content-Type: application/json' \
+  -H 'X-Service-Token: <your-service-token>' \
+  -d '{
+    "emailSender": {
+      "serverHost": "new.smtp.server.com",
+      "username": "newuser@example.com",
+      "password": "new-smtp-password"
+    }
+  }'
+  ```
+  Replace `<your-service-token>` with the service's token.
+
 ---
 
 ### 2. Template Management

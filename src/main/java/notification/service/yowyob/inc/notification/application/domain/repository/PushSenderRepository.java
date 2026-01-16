@@ -7,4 +7,5 @@ import reactor.core.publisher.Mono;
 public interface PushSenderRepository {
   Mono<PushSender> save(PushSender pushSender);
   Mono<PushSender> findByServiceApp(ServiceApp serviceApp);
+  Mono<PushSender> findByServiceAppId(Integer serviceAppId);
 }

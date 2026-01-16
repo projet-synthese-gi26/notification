@@ -30,6 +30,12 @@ public class SMSSenderRepositoryAdapter implements SMSSenderRepository {
         .map(this::toDomainObject);
   }
 
+  @Override
+  public Mono<SMSSender> findByServiceAppId(Integer serviceAppId) {
+    return smsSenderEntityRepository.findByServiceAppId(serviceAppId)
+        .map(this::toDomainObject);
+  }
+
   private SMSSender toDomainObject(SMSSenderEntity entity) {
     return modelMapper.map(entity, SMSSender.class);
   }

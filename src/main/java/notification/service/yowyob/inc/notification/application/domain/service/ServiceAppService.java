@@ -1,22 +1,19 @@
 package notification.service.yowyob.inc.notification.application.domain.service;
 
 import lombok.AllArgsConstructor;
-import reactor.core.publisher.Mono;
-
-import java.util.UUID;
-
-import notification.service.yowyob.inc.notification.application.domain.model.EmailSender;
-import notification.service.yowyob.inc.notification.application.domain.model.SMSSender;
-import notification.service.yowyob.inc.notification.application.domain.model.ServiceApp;
-import notification.service.yowyob.inc.notification.application.domain.model.WhatsappSender;
-import notification.service.yowyob.inc.notification.application.domain.repository.EmailSenderRepository;
-import notification.service.yowyob.inc.notification.application.domain.repository.SMSSenderRepository;
-import notification.service.yowyob.inc.notification.application.domain.repository.ServiceAppRepository;
-import notification.service.yowyob.inc.notification.application.domain.repository.WhatsappSenderRepository;
-import notification.service.yowyob.inc.notification.application.domain.repository.PushSenderRepository;
-import notification.service.yowyob.inc.notification.application.domain.model.PushSender;
+import notification.service.yowyob.inc.notification.application.domain.model.*;
+import notification.service.yowyob.inc.notification.application.domain.repository.*;
+import notification.service.yowyob.inc.notification.application.port.input.dto.ServiceAppUpdateRequest;
 import notification.service.yowyob.inc.notification.application.port.input.dto.ServiceCreateRequest;
 import notification.service.yowyob.inc.notification.application.port.output.dto.ServiceCreateResponse;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 @AllArgsConstructor
 public class ServiceAppService {
@@ -84,5 +81,82 @@ public class ServiceAppService {
   public Mono<ServiceApp> getServiceAppByToken(String token) {
     return this.serviceAppRepository.findByToken(UUID.fromString(token));
   }
-}
 
+
+    @Transactional
+    public Mono<Void> updateServiceApp(String serviceToken, ServiceAppUpdateRequest request) {
+        return serviceAppRepository.findByToken(UUID.fromString(serviceToken))
+                .switchIfEmpty(Mono.error(new RuntimeException("Service app not found")))
+                .flatMap(serviceApp -> {
+                    List<Mono<Void>> updateMonos = new ArrayList<>();
+
+                    if (request.getEmailSender() != null) {
+                        updateMonos.add(
+                                emailSenderRepository.findByServiceAppId(serviceApp.getServiceId())
+                                                                                 .flatMap(emailSender -> {
+                                                                                     if (StringUtils.hasText(request.getEmailSender().getServerHost())) {
+                                                                                         emailSender.setServerHost(request.getEmailSender().getServerHost());
+                                                                                     }
+                                                                                     if (StringUtils.hasText(request.getEmailSender().getServerPort())) {
+                                                                                         emailSender.setServerPort(request.getEmailSender().getServerPort());
+                                                                                     }
+                                                                                     if (StringUtils.hasText(request.getEmailSender().getUsername())) {
+                                                                                         emailSender.setUsername(request.getEmailSender().getUsername());
+                                                                                     }
+                                                                                     if (StringUtils.hasText(request.getEmailSender().getPassword())) {
+                                                                                         emailSender.setPassword(request.getEmailSender().getPassword());
+                                                                                     }
+                                                                                     return emailSenderRepository.save(emailSender).then();
+                                                                                 })                        );
+                    }
+
+                    if (request.getSmsSender() != null) {
+                        updateMonos.add(
+                                smsSenderRepository.findByServiceAppId(serviceApp.getServiceId())
+                                                                                 .flatMap(smsSender -> {
+                                                                                     if (StringUtils.hasText(request.getSmsSender().getServerHost())) {
+                                                                                         smsSender.setServerHost(request.getSmsSender().getServerHost());
+                                                                                     }
+                                                                                     if (StringUtils.hasText(request.getSmsSender().getServerPort())) {
+                                                                                         smsSender.setServerPort(request.getSmsSender().getServerPort());
+                                                                                     }
+                                                                                     if (StringUtils.hasText(request.getSmsSender().getToken())) {
+                                                                                         smsSender.setToken(request.getSmsSender().getToken());
+                                                                                     }
+                                                                                     return smsSenderRepository.save(smsSender).then();
+                                                                                 })                        );
+                    }
+
+                    if (request.getPushSender() != null) {
+                        updateMonos.add(
+                                pushSenderRepository.findByServiceAppId(serviceApp.getServiceId())
+                                                                                 .flatMap(pushSender -> {
+                                                                                     if (StringUtils.hasText(request.getPushSender().getServiceAccountJson())) {
+                                                                                         pushSender.setServiceAccountJson(request.getPushSender().getServiceAccountJson());
+                                                                                     }
+                                                                                     return pushSenderRepository.save(pushSender).then();
+                                                                                 })                        );
+                    }
+
+                    if (request.getWhatsappSender() != null) {
+                        updateMonos.add(
+                                whatsappSenderRepository.findByServiceAppId(serviceApp.getServiceId())
+                                                                                                                          .flatMap(whatsappSender -> {
+                                                                                                                              if (StringUtils.hasText(request.getWhatsappSender().getApiUrl())) {
+                                                                                                                                  whatsappSender.setApiUrl(request.getWhatsappSender().getApiUrl());
+                                                                                                                              }
+                                                                                                                              if (StringUtils.hasText(request.getWhatsappSender().getIdInstance())) {
+                                                                                                                                  whatsappSender.setIdInstance(request.getWhatsappSender().getIdInstance());
+                                                                                                                              }
+                                                                                                                              if (StringUtils.hasText(request.getWhatsappSender().getApiTokenInstance())) {
+                                                                                                                                  whatsappSender.setApiTokenInstance(request.getWhatsappSender().getApiTokenInstance());
+                                                                                                                              }
+                                                                                                                              return whatsappSenderRepository.save(whatsappSender).then();
+                                                                                                                          })                        );
+                    }
+
+                    return Mono.when(updateMonos);
+                });
+    }
+
+}

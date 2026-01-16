@@ -15,7 +15,12 @@ import lombok.AllArgsConstructor;
 import notification.service.yowyob.inc.notification.application.domain.service.ServiceAppService;
 import notification.service.yowyob.inc.notification.application.port.input.dto.ServiceCreateRequest;
 import notification.service.yowyob.inc.notification.application.port.output.dto.ServiceCreateResponse;
+import notification.service.yowyob.inc.notification.application.port.input.dto.ServiceAppUpdateRequest;
+import org.springframework.web.bind.annotation.PatchMapping;
 import reactor.core.publisher.Mono;
+
+import java.util.UUID;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 @Tag(name = "Service Management", description = "APIs for registering and managing services")
 @RestController
@@ -33,6 +38,18 @@ public class ServiceAppController {
       @RequestBody ServiceCreateRequest serviceCreateRequest) {
     return serviceAppService.registerServiceApp(serviceCreateRequest)
         .map(response -> ResponseEntity.ok().body(response));
+  }
+
+
+  @Operation(summary = "Update a service's sender configurations", description = "Updates a service's sender configurations (Email, SMS, Push, Whatsapp).", responses = {
+          @ApiResponse(responseCode = "204", description = "Service updated successfully")
+  })
+  @PatchMapping
+  public Mono<ResponseEntity<Void>> updateServiceApp(
+          @RequestHeader("X-Service-Token") String serviceToken,
+          @RequestBody ServiceAppUpdateRequest serviceAppUpdateRequest) {
+    return serviceAppService.updateServiceApp(serviceToken, serviceAppUpdateRequest)
+            .then(Mono.fromCallable(() -> ResponseEntity.noContent().build()));
   }
 
 }

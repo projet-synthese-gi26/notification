@@ -30,6 +30,12 @@ public class WhatsappSenderRepositoryAdapter implements WhatsappSenderRepository
                 .map(this::toDomain);
     }
 
+    @Override
+    public Mono<WhatsappSender> findByServiceAppId(Integer serviceAppId) {
+        return whatsappSenderEntityRepository.findByServiceAppId(serviceAppId)
+                .map(this::toDomain);
+    }
+
     private WhatsappSender toDomain(WhatsappSenderEntity entity) {
         return modelMapper.map(entity, WhatsappSender.class);
     }

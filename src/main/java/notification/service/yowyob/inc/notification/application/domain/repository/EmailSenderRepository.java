@@ -6,5 +6,8 @@ import reactor.core.publisher.Mono;
 
 public interface EmailSenderRepository {
   Mono<EmailSender> save(EmailSender emailSender);
+
   Mono<EmailSender> findByServiceApp(ServiceApp serviceApp);
+
+  Mono<EmailSender> findByServiceAppId(Integer serviceAppId);
 }

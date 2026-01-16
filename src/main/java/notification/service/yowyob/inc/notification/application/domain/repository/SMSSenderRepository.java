@@ -7,4 +7,5 @@ import reactor.core.publisher.Mono;
 public interface SMSSenderRepository {
   Mono<SMSSender> save(SMSSender smsSender);
   Mono<SMSSender> findByServiceApp(ServiceApp serviceApp);
+  Mono<SMSSender> findByServiceAppId(Integer serviceAppId);
 }

@@ -9,4 +9,5 @@ public interface ServiceAppRepository {
   Mono<ServiceApp> save(ServiceApp serviceApp);
 
   Mono<ServiceApp> findByToken(UUID token);
+  Mono<ServiceApp> findById(Integer id);
 }

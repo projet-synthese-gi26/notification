@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.AllArgsConstructor;
-import notification.service.yowyob.inc.notification.application.domain.model.SMSSender;
-import notification.service.yowyob.inc.notification.application.domain.model.SMSTemplate;
 import notification.service.yowyob.inc.notification.application.domain.model.ServiceApp;
 import notification.service.yowyob.inc.notification.application.domain.repository.SMSSenderRepository;
 import notification.service.yowyob.inc.notification.application.domain.repository.SMSTemplateRepository;

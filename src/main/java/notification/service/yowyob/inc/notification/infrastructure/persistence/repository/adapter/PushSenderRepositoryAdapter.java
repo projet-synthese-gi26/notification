@@ -30,6 +30,12 @@ public class PushSenderRepositoryAdapter implements PushSenderRepository {
         .map(this::toDomainObject);
   }
 
+  @Override
+  public Mono<PushSender> findByServiceAppId(Integer serviceAppId) {
+    return pushSenderEntityRepository.findByServiceAppId(serviceAppId)
+        .map(this::toDomainObject);
+  }
+
   private PushSender toDomainObject(PushSenderEntity entity) {
     return modelMapper.map(entity, PushSender.class);
   }

@@ -30,6 +30,12 @@ public class EmailSenderRepositoryAdapter implements EmailSenderRepository {
         .map(this::toDomainObject);
   }
 
+  @Override
+  public Mono<EmailSender> findByServiceAppId(Integer serviceAppId) {
+    return emailSenderEntityRepository.findByServiceAppId(serviceAppId)
+        .map(this::toDomainObject);
+  }
+
   private EmailSender toDomainObject(EmailSenderEntity entity) {
     return modelMapper.map(entity, EmailSender.class);
   }
