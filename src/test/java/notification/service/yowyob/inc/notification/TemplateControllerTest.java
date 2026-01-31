@@ -1,5 +1,6 @@
 package notification.service.yowyob.inc.notification;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import notification.service.yowyob.inc.notification.application.domain.enums.NotificationType;
 import notification.service.yowyob.inc.notification.application.domain.model.ServiceApp;
 import notification.service.yowyob.inc.notification.application.domain.repository.ServiceAppRepository;
@@ -12,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import java.util.Map;
 import java.util.UUID;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -111,5 +113,186 @@ public class TemplateControllerTest {
                 .expectBody()
                 .jsonPath("$.name").isEqualTo("Pull Template")
                 .jsonPath("$.message").isEqualTo("Hello {{name}}");
+    }
+
+    @Test
+    void testGetTemplatePreviews() {
+        TemplateCreateRequest smsRequest = new TemplateCreateRequest();
+        smsRequest.setName("SMS Template 1");
+        smsRequest.setType(NotificationType.SMS);
+        smsRequest.setMessage("Hello from SMS");
+        smsRequest.setDescription("A test SMS template");
+
+        TemplateCreateRequest emailRequest = new TemplateCreateRequest();
+        emailRequest.setName("Email Template 1");
+        emailRequest.setType(NotificationType.EMAIL);
+        emailRequest.setFromEmail("test@example.com");
+        emailRequest.setSubject("Test Email");
+        emailRequest.setBodyHtml("<h1>Hello from Email</h1>");
+        emailRequest.setDescription("A test Email template");
+
+        webTestClient.post()
+                .uri("/api/v1/templates")
+                .header("X-Service-Token", serviceApp.getToken().toString())
+                .bodyValue(smsRequest)
+                .exchange()
+                .expectStatus().isCreated();
+
+        webTestClient.post()
+                .uri("/api/v1/templates")
+                .header("X-Service-Token", serviceApp.getToken().toString())
+                .bodyValue(emailRequest)
+                .exchange()
+                .expectStatus().isCreated();
+
+        webTestClient.get()
+                .uri("/api/v1/templates/previews")
+                .header("X-Service-Token", serviceApp.getToken().toString())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$").isArray()
+                .jsonPath("$.length()").isEqualTo(2);
+    }
+
+    @Test
+    void testGetTemplateById() {
+        TemplateCreateRequest request = new TemplateCreateRequest();
+        request.setName("SMS Template to Get");
+        request.setType(NotificationType.SMS);
+        request.setMessage("Message to get");
+        request.setDescription("Description to get");
+
+        Map<String, Object> responseBody = webTestClient.post()
+                .uri("/api/v1/templates")
+                .header("X-Service-Token", serviceApp.getToken().toString())
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(Map.class)
+                .returnResult()
+                .getResponseBody();
+
+        Integer templateId = (Integer) responseBody.get("templateId");
+
+        webTestClient.get()
+                .uri("/api/v1/templates/{id}?type={type}", templateId, NotificationType.SMS)
+                .header("X-Service-Token", serviceApp.getToken().toString())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.name").isEqualTo("SMS Template to Get")
+                .jsonPath("$.message").isEqualTo("Message to get");
+    }
+
+    @Test
+    void testGetTemplateById_Unauthorized() {
+        TemplateCreateRequest request = new TemplateCreateRequest();
+        request.setName("SMS Template to Get");
+        request.setType(NotificationType.SMS);
+        request.setMessage("Message to get");
+        request.setDescription("Description to get");
+
+        Map<String, Object> responseBody = webTestClient.post()
+            .uri("/api/v1/templates")
+            .header("X-Service-Token", serviceApp.getToken().toString())
+            .bodyValue(request)
+            .exchange()
+            .expectStatus().isCreated()
+            .expectBody(Map.class)
+            .returnResult()
+            .getResponseBody();
+
+        Integer templateId = (Integer) responseBody.get("templateId");
+
+        // Create a new service to simulate an unauthorized request
+        ServiceApp otherApp = new ServiceApp();
+        otherApp.setName("Other App");
+        otherApp.setToken(UUID.randomUUID());
+        serviceAppRepository.save(otherApp).block();
+
+        webTestClient.get()
+            .uri("/api/v1/templates/{id}?type={type}", templateId, NotificationType.SMS)
+            .header("X-Service-Token", otherApp.getToken().toString())
+            .exchange()
+            .expectStatus().isUnauthorized();
+    }
+
+
+    @Test
+    void testPatchTemplate() {
+        TemplateCreateRequest createRequest = new TemplateCreateRequest();
+        createRequest.setName("Original SMS Template");
+        createRequest.setType(NotificationType.SMS);
+        createRequest.setMessage("Original Message");
+        createRequest.setDescription("Original Description");
+
+        Map<String, Object> responseBody = webTestClient.post()
+                .uri("/api/v1/templates")
+                .header("X-Service-Token", serviceApp.getToken().toString())
+                .bodyValue(createRequest)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(Map.class)
+                .returnResult()
+                .getResponseBody();
+
+        Integer templateId = (Integer) responseBody.get("templateId");
+
+        TemplateCreateRequest updateRequest = new TemplateCreateRequest();
+        updateRequest.setName("Updated SMS Template");
+        updateRequest.setMessage("Updated Message");
+        updateRequest.setDescription("Updated Description");
+
+        webTestClient.patch()
+                .uri("/api/v1/templates/{id}?type={type}", templateId, NotificationType.SMS)
+                .header("X-Service-Token", serviceApp.getToken().toString())
+                .bodyValue(updateRequest)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.name").isEqualTo("Updated SMS Template")
+                .jsonPath("$.message").isEqualTo("Updated Message");
+
+        webTestClient.get()
+                .uri("/api/v1/templates/{id}?type={type}", templateId, NotificationType.SMS)
+                .header("X-Service-Token", serviceApp.getToken().toString())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.name").isEqualTo("Updated SMS Template");
+    }
+
+    @Test
+    void testDeleteTemplate() {
+        TemplateCreateRequest request = new TemplateCreateRequest();
+        request.setName("SMS Template to Delete");
+        request.setType(NotificationType.SMS);
+        request.setMessage("Message to delete");
+        request.setDescription("Description to delete");
+
+        Map<String, Object> responseBody = webTestClient.post()
+                .uri("/api/v1/templates")
+                .header("X-Service-Token", serviceApp.getToken().toString())
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(Map.class)
+                .returnResult()
+                .getResponseBody();
+
+        Integer templateId = (Integer) responseBody.get("templateId");
+
+        webTestClient.delete()
+                .uri("/api/v1/templates/{id}?type={type}", templateId, NotificationType.SMS)
+                .header("X-Service-Token", serviceApp.getToken().toString())
+                .exchange()
+                .expectStatus().isNoContent();
+
+        webTestClient.get()
+                .uri("/api/v1/templates/{id}?type={type}", templateId, NotificationType.SMS)
+                .header("X-Service-Token", serviceApp.getToken().toString())
+                .exchange()
+                .expectStatus().isNotFound();
     }
 }

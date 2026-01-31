@@ -1,6 +1,5 @@
 package notification.service.yowyob.inc.notification.infrastructure.persistence.repository.adapter;
 
-import lombok.AllArgsConstructor;
 import notification.service.yowyob.inc.notification.application.domain.model.EmailTemplate;
 import notification.service.yowyob.inc.notification.application.domain.model.ServiceApp;
 import notification.service.yowyob.inc.notification.application.domain.repository.EmailTemplateRepository;
@@ -8,6 +7,9 @@ import notification.service.yowyob.inc.notification.infrastructure.persistence.e
 import notification.service.yowyob.inc.notification.infrastructure.persistence.repository.EmailTemplateEntityRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
+
+import lombok.AllArgsConstructor;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -33,6 +35,23 @@ public class EmailTemplateRepositoryAdapter implements EmailTemplateRepository {
   @Override
   public Mono<EmailTemplate> findByServiceApp(ServiceApp serviceApp) {
     return emailTemplateEntityRepository.findByServiceAppId(serviceApp.getServiceId())
+        .map(this::toDomainObject);
+  }
+
+  @Override
+  public Flux<EmailTemplate> findAllByServiceAppId(Integer serviceAppId) {
+    return emailTemplateEntityRepository.findAllByServiceAppId(serviceAppId)
+        .map(this::toDomainObject);
+  }
+
+  @Override
+  public Mono<Void> deleteById(Integer id) {
+    return emailTemplateEntityRepository.deleteById(id);
+  }
+
+  @Override
+  public Mono<EmailTemplate> findById(Integer id) {
+    return emailTemplateEntityRepository.findById(id)
         .map(this::toDomainObject);
   }
 

@@ -1,6 +1,5 @@
 package notification.service.yowyob.inc.notification.infrastructure.persistence.repository.adapter;
 
-import lombok.AllArgsConstructor;
 import notification.service.yowyob.inc.notification.application.domain.model.SMSTemplate;
 import notification.service.yowyob.inc.notification.application.domain.model.ServiceApp;
 import notification.service.yowyob.inc.notification.application.domain.repository.SMSTemplateRepository;
@@ -8,6 +7,9 @@ import notification.service.yowyob.inc.notification.infrastructure.persistence.e
 import notification.service.yowyob.inc.notification.infrastructure.persistence.repository.SMSTemplateEntityRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
+
+import lombok.AllArgsConstructor;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -33,6 +35,23 @@ public class SMSTemplateRepositoryAdapter implements SMSTemplateRepository {
   @Override
   public Mono<SMSTemplate> findByServiceApp(ServiceApp serviceApp) {
     return smsTemplateEntityRepository.findByServiceAppId(serviceApp.getServiceId())
+        .map(this::toDomainObject);
+  }
+
+  @Override
+  public Flux<SMSTemplate> findAllByServiceAppId(Integer serviceAppId) {
+    return smsTemplateEntityRepository.findAllByServiceAppId(serviceAppId)
+        .map(this::toDomainObject);
+  }
+
+  @Override
+  public Mono<Void> deleteById(Integer id) {
+    return smsTemplateEntityRepository.deleteById(id);
+  }
+
+  @Override
+  public Mono<SMSTemplate> findById(Integer id) {
+    return smsTemplateEntityRepository.findById(id)
         .map(this::toDomainObject);
   }
 

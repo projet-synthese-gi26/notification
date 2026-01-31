@@ -1,6 +1,5 @@
 package notification.service.yowyob.inc.notification.infrastructure.persistence.repository.adapter;
 
-import lombok.AllArgsConstructor;
 import notification.service.yowyob.inc.notification.application.domain.model.ServiceApp;
 import notification.service.yowyob.inc.notification.application.domain.model.WhatsappTemplate;
 import notification.service.yowyob.inc.notification.application.domain.repository.WhatsappTemplateRepository;
@@ -8,6 +7,9 @@ import notification.service.yowyob.inc.notification.infrastructure.persistence.e
 import notification.service.yowyob.inc.notification.infrastructure.persistence.repository.WhatsappTemplateEntityRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
+
+import lombok.AllArgsConstructor;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -25,8 +27,31 @@ public class WhatsappTemplateRepositoryAdapter implements WhatsappTemplateReposi
     }
 
     @Override
+    public Mono<WhatsappTemplate> findById(int id) {
+        return whatsappTemplateEntityRepository.findById(id)
+                .map(this::toDomain);
+    }
+
+    @Override
     public Mono<WhatsappTemplate> findByServiceApp(ServiceApp serviceApp) {
         return whatsappTemplateEntityRepository.findByServiceAppId(serviceApp.getServiceId())
+                .map(this::toDomain);
+    }
+
+    @Override
+    public Flux<WhatsappTemplate> findAllByServiceAppId(Integer serviceAppId) {
+        return whatsappTemplateEntityRepository.findAllByServiceAppId(serviceAppId)
+                .map(this::toDomain);
+    }
+
+    @Override
+    public Mono<Void> deleteById(Integer id) {
+        return whatsappTemplateEntityRepository.deleteById(id);
+    }
+
+    @Override
+    public Mono<WhatsappTemplate> findById(Integer id) {
+        return whatsappTemplateEntityRepository.findById(id)
                 .map(this::toDomain);
     }
 

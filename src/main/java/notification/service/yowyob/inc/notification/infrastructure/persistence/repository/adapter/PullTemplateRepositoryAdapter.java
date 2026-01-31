@@ -1,6 +1,5 @@
 package notification.service.yowyob.inc.notification.infrastructure.persistence.repository.adapter;
 
-import lombok.AllArgsConstructor;
 import notification.service.yowyob.inc.notification.application.domain.model.PullTemplate;
 import notification.service.yowyob.inc.notification.application.domain.model.ServiceApp;
 import notification.service.yowyob.inc.notification.application.domain.repository.PullTemplateRepository;
@@ -8,6 +7,9 @@ import notification.service.yowyob.inc.notification.infrastructure.persistence.e
 import notification.service.yowyob.inc.notification.infrastructure.persistence.repository.PullTemplateEntityRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
+
+import lombok.AllArgsConstructor;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -33,6 +35,23 @@ public class PullTemplateRepositoryAdapter implements PullTemplateRepository {
   @Override
   public Mono<PullTemplate> findByServiceApp(ServiceApp serviceApp) {
     return pullTemplateEntityRepository.findByServiceAppId(serviceApp.getServiceId())
+        .map(this::toDomainObject);
+  }
+
+  @Override
+  public Flux<PullTemplate> findAllByServiceAppId(Integer serviceAppId) {
+    return pullTemplateEntityRepository.findAllByServiceAppId(serviceAppId)
+        .map(this::toDomainObject);
+  }
+
+  @Override
+  public Mono<Void> deleteById(Integer id) {
+    return pullTemplateEntityRepository.deleteById(id);
+  }
+
+  @Override
+  public Mono<PullTemplate> findById(Integer id) {
+    return pullTemplateEntityRepository.findById(id)
         .map(this::toDomainObject);
   }
 
