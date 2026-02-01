@@ -15,27 +15,26 @@ import reactor.core.publisher.Mono;
 @AllArgsConstructor
 public class WhatsappSenderService implements SenderStrategy {
 
-  private final WhatsappTemplateRepository whatsappTemplateRepository;
-  private final WhatsappSenderServiceInterface whatsappSenderServiceInterface;
-  private final WhatsappSenderRepository whatsappSenderRepository;
+    private final WhatsappTemplateRepository whatsappTemplateRepository;
+    private final WhatsappSenderServiceInterface whatsappSenderServiceInterface;
+    private final WhatsappSenderRepository whatsappSenderRepository;
 
-  @Override
-  public Mono<Void> execute(ServiceApp serviceApp, int templateId, List<String> to, Map<String, String> data) {
-    return whatsappTemplateRepository.findByServiceApp(serviceApp)
-        .zipWith(whatsappSenderRepository.findByServiceApp(serviceApp))
-        .flatMap(tuple -> {
-            WhatsappTemplate whatsappTemplate = tuple.getT1();
-            WhatsappSender whatsappSender = tuple.getT2();
-            String body = Utils.replaceVariables(whatsappTemplate.getBody(), data);
+    @Override
+    public Mono<Void> execute(ServiceApp serviceApp, int templateId, List<String> to, Map<String, String> data) {
+        return whatsappTemplateRepository.findById(templateId)
+                .zipWith(whatsappSenderRepository.findByServiceApp(serviceApp))
+                .flatMap(tuple -> {
+                    WhatsappTemplate whatsappTemplate = tuple.getT1();
+                    WhatsappSender whatsappSender = tuple.getT2();
+                    String body = Utils.replaceVariables(whatsappTemplate.getBody(), data);
 
-            return whatsappSenderServiceInterface.sendWhatsappMessage(
-                whatsappSender.getApiUrl(),
-                whatsappSender.getApiTokenInstance(),
-                whatsappSender.getIdInstance(),
-                body,
-                to
-            );
-        });
-  }
+                    return whatsappSenderServiceInterface.sendWhatsappMessage(
+                            whatsappSender.getApiUrl(),
+                            whatsappSender.getApiTokenInstance(),
+                            whatsappSender.getIdInstance(),
+                            body,
+                            to);
+                });
+    }
 
 }
