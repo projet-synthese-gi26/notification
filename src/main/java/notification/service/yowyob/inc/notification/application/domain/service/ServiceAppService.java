@@ -3,13 +3,14 @@ package notification.service.yowyob.inc.notification.application.domain.service;
 import lombok.AllArgsConstructor;
 import notification.service.yowyob.inc.notification.application.domain.model.*;
 import notification.service.yowyob.inc.notification.application.domain.repository.*;
+import notification.service.yowyob.inc.notification.application.exception.InvalidRequestArgumentException;
+import notification.service.yowyob.inc.notification.application.exception.ResourceNotFoundException;
 import notification.service.yowyob.inc.notification.application.port.input.dto.ServiceAppUpdateRequest;
 import notification.service.yowyob.inc.notification.application.port.input.dto.ServiceCreateRequest;
 import notification.service.yowyob.inc.notification.application.port.output.dto.ServiceCreateResponse;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +25,7 @@ public class ServiceAppService {
   private final WhatsappSenderRepository whatsappSenderRepository;
   private final PushSenderRepository pushSenderRepository; // New dependency
 
+  @Transactional
   public Mono<ServiceCreateResponse> registerServiceApp(ServiceCreateRequest request) {
     ServiceApp serviceAppToSave = new ServiceApp();
     serviceAppToSave.setName(request.getName());
@@ -78,15 +80,18 @@ public class ServiceAppService {
         });
   }
 
-  public Mono<ServiceApp> getServiceAppByToken(String token) {
-    return this.serviceAppRepository.findByToken(UUID.fromString(token));
-  }
+    public Mono<ServiceApp> getServiceAppByToken(String token) {
+        return Mono.fromCallable(() -> UUID.fromString(token))
+                .onErrorMap(IllegalArgumentException.class, e -> new InvalidRequestArgumentException("Invalid token format"))
+                .flatMap(serviceAppRepository::findByToken)
+                .switchIfEmpty(Mono.error(new ResourceNotFoundException("Service app not found for the given token")));
+    }
 
 
     @Transactional
     public Mono<Void> updateServiceApp(String serviceToken, ServiceAppUpdateRequest request) {
         return serviceAppRepository.findByToken(UUID.fromString(serviceToken))
-                .switchIfEmpty(Mono.error(new RuntimeException("Service app not found")))
+                .switchIfEmpty(Mono.error(new ResourceNotFoundException("Service app not found")))
                 .flatMap(serviceApp -> {
                     List<Mono<Void>> updateMonos = new ArrayList<>();
 

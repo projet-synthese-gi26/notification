@@ -1,10 +1,12 @@
 package notification.service.yowyob.inc.notification.infrastructure.service;
 
 import lombok.AllArgsConstructor;
+import notification.service.yowyob.inc.notification.application.exception.NotificationSendingException;
 import notification.service.yowyob.inc.notification.application.port.output.service.WhatsappSenderServiceInterface;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -34,7 +36,11 @@ public class WhatsappSenderServiceAdapter implements WhatsappSenderServiceInterf
                             .contentType(MediaType.APPLICATION_JSON)
                             .bodyValue(requestBody)
                             .retrieve()
-                            .bodyToMono(Void.class);
+                            .bodyToMono(Void.class)
+                            .onErrorMap(
+                                WebClientResponseException.class,
+                                e -> new NotificationSendingException("Failed to send WhatsApp message: " + e.getResponseBodyAsString(), e)
+                            );
                 })
                 .then();
     }

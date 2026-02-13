@@ -4,7 +4,9 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import notification.service.yowyob.inc.notification.application.exception.NotificationSendingException;
 import notification.service.yowyob.inc.notification.application.port.output.service.EmailSenderServiceInterface;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
@@ -22,25 +24,25 @@ public class EmailSenderServiceAdapter implements EmailSenderServiceInterface {
   public void sendEmail(List<String> to, String from, String template, Map<String, String> data, String subject,
       String smtpServer, String smtpPort, String username, String password) {
 
-    // 1. Configurer dynamiquement le sender pour chaque envoi
-    JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-    mailSender.setHost(smtpServer);
-    mailSender.setPort(Integer.parseInt(smtpPort));
-    mailSender.setUsername(username);
-    mailSender.setPassword(password);
-
-    Properties props = mailSender.getJavaMailProperties();
-    props.put("mail.transport.protocol", "smtp");
-    props.put("mail.smtp.auth", "true");
-    props.put("mail.smtp.starttls.enable", "true");
-    props.put("mail.debug", "true"); // Mettre à false en production
-
-    // 2. Remplacer les variables dans le sujet et le corps de l'email
-    String processedSubject = replaceVariables(subject, data);
-    String htmlBody = replaceVariables(template, data);
-
-    // 3. Créer et envoyer le message
     try {
+      // 1. Configurer dynamiquement le sender pour chaque envoi
+      JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+      mailSender.setHost(smtpServer);
+      mailSender.setPort(Integer.parseInt(smtpPort));
+      mailSender.setUsername(username);
+      mailSender.setPassword(password);
+
+      Properties props = mailSender.getJavaMailProperties();
+      props.put("mail.transport.protocol", "smtp");
+      props.put("mail.smtp.auth", "true");
+      props.put("mail.smtp.starttls.enable", "true");
+      props.put("mail.debug", "true"); // Mettre à false en production
+
+      // 2. Remplacer les variables dans le sujet et le corps de l'email
+      String processedSubject = replaceVariables(subject, data);
+      String htmlBody = replaceVariables(template, data);
+
+      // 3. Créer et envoyer le message
       MimeMessage mimeMessage = mailSender.createMimeMessage();
       MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
       helper.setFrom(from);
@@ -51,10 +53,10 @@ public class EmailSenderServiceAdapter implements EmailSenderServiceInterface {
       mailSender.send(mimeMessage);
       log.info("Email sent successfully to {}", to);
 
-    } catch (MessagingException e) {
+    } catch (MailException | MessagingException | NumberFormatException e) {
       log.error("Failed to send email to {}", to, e);
-      // Dans une vraie application, vous pourriez lancer une exception personnalisée
-      // ici
+      // Lancer une exception personnalisée pour la gestion globale
+      throw new NotificationSendingException("Failed to send email: " + e.getMessage(), e);
     }
   }
 
