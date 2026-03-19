@@ -1,0 +1,66 @@
+# ===================================================================
+# PRODUCTION CONFIGURATION - NOTIFICATION API
+# ===================================================================
+
+spring:
+  # ------------------------------------------------------------------
+  # DATABASE — Liquibase (JDBC)
+  # ------------------------------------------------------------------
+  liquibase:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME}
+    user: ${DB_LIQUIBASE_USERNAME:${DB_USERNAME}}
+    password: ${DB_LIQUIBASE_PASSWORD:${DB_PASSWORD}}
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+  # ------------------------------------------------------------------
+  # DATABASE — Datasource JDBC (Requis pour que Spring instancie Liquibase)
+  # ------------------------------------------------------------------
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  # ------------------------------------------------------------------
+  # DATABASE — R2DBC (Application Réactive)
+  # ------------------------------------------------------------------
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    pool:
+      enabled: true
+      initial-size: 5
+      max-size: 20 # Plus large en prod
+      max-idle-time: 30m
+
+  # ------------------------------------------------------------------
+  # KAFKA — Connexion sécurisée
+  # ------------------------------------------------------------------
+  kafka:
+    bootstrap-servers: ${KAFKA_HOST}:${KAFKA_PORT:9092}
+    consumer:
+      group-id: yowyob.notification-group
+      auto-offset-reset: earliest
+      enable-auto-commit: false # Plus fiable pour les notifications
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "notification.service.yowyob.inc.*"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+
+# Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ["health", "info", "prometheus"]
+  endpoint:
+    health:
+      show-details: "always"

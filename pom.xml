@@ -104,6 +104,19 @@
 			<version>9.2.0</version>
 		</dependency>
 
+		<!-- LIQUIBASE (Migration DB) -->
+		<dependency>
+			<groupId>org.liquibase</groupId>
+			<artifactId>liquibase-core</artifactId>
+		</dependency>
+
+		<!-- JDBC Driver requis pour Liquibase (R2DBC ne suffit pas pour la migration) -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
         <!-- MESSAGING (KAFKA) -->
 		<dependency>
 				<groupId>org.springframework.kafka</groupId>

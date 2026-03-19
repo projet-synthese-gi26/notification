@@ -1,14 +1,7 @@
--- Supprime les tables si elles existent pour un redémarrage propre en développement
--- DROP TABLE IF EXISTS notification;
--- DROP TABLE IF EXISTS email_template;
--- DROP TABLE IF EXISTS sms_template;
--- DROP TABLE IF EXISTS pull_template;
--- DROP TABLE IF EXISTS email_sender;
--- DROP TABLE IF EXISTS sms_sender;
--- DROP TABLE IF EXISTS service_app;
--- DROP TABLE IF EXISTS whatsapp_sender;
--- DROP TABLE IF EXISTS whatsapp_template;
+-- liquibase formatted sql
 
+-- changeset yowyob:001-initial-schema
+-- comment: Initialisation du schéma de l'API de Notification
 
 -- Table pour les applications de service
 CREATE TABLE IF NOT EXISTS service_app (
@@ -73,11 +66,9 @@ CREATE TABLE IF NOT EXISTS notification (
     notification_type VARCHAR(50),
     status VARCHAR(50),
     created_at TIMESTAMP,
-    data JSONB, -- Utiliser JSONB pour stocker des données flexibles en PostgreSQL
+    data JSONB, 
     service_app_id INTEGER REFERENCES service_app(service_id)
 );
-
--- NOTE: Les tables pour sms_template et pull_template peuvent être ajoutées sur le même modèle.
 
 -- Table pour les configurations d'envoi de Push
 CREATE TABLE IF NOT EXISTS push_sender (
@@ -95,5 +86,22 @@ CREATE TABLE IF NOT EXISTS push_template (
     body TEXT,
     image_url VARCHAR(255),
     click_action TEXT,
+    service_app_id INTEGER REFERENCES service_app(service_id)
+);
+
+-- Ajout des tables manquantes pour la cohérence de la TemplateFactory
+CREATE TABLE IF NOT EXISTS sms_template (
+    template_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    message TEXT,
+    service_app_id INTEGER REFERENCES service_app(service_id)
+);
+
+CREATE TABLE IF NOT EXISTS pull_template (
+    template_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    message TEXT,
     service_app_id INTEGER REFERENCES service_app(service_id)
 );

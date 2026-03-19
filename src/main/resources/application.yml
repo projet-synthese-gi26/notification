@@ -1,24 +1,40 @@
 spring:
   application:
-    name: notificaton
+    name: notification-service
+  profiles:
+    active: local
+
+  # 1. CONFIGURATION R2DBC (Réactif - Pour le code Java)
   r2dbc:
-    url: r2dbc:postgresql://${DB_HOST:172.17.0.2}:${DB_PORT:5432}/${DB_NAME:notification}
+    url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:notification}
     username: ${DB_USERNAME:notification}
     password: ${DB_PASSWORD:notification}
     pool:
       enabled: true
       initial-size: 1
       max-size: 5
-      max-idle-time: 30m
-      max-life-time: 10m
-      acquire-retry: 3
-      max-acquire-time: 30s
-      validation-query: SELECT 1
+
+  # 2. CONFIGURATION JDBC (Bloquant - Uniquement pour Liquibase)
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:notification}
+    username: ${DB_USERNAME:notification}
+    password: ${DB_PASSWORD:notification}
+    driver-class-name: org.postgresql.Driver
+
+  # 3. ACTIVATION LIQUIBASE
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    # On peut définir un schéma spécifique si besoin (ex: public ou notification)
+    default-schema: public
+
+  # 4. DESACTIVATION DE L'ANCIEN SYSTÈME
   sql:
     init:
-      mode: always # always | embedded | never
+      mode: never # On n'utilise plus schema.sql
+
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:168.119.122.86:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
       group-id: notification_group_id
       auto-offset-reset: earliest
@@ -30,7 +46,7 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
-# CUSTOM CONFIG
+# Custom Config (inchangé pour l'instant)
 application:
   kafka:
     topics:
