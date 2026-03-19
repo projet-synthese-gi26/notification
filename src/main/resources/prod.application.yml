@@ -13,9 +13,10 @@ spring:
   # DATABASE — Liquibase (JDBC)
   # ------------------------------------------------------------------
   liquibase:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME:yowyob}
-    user: ${DB_LIQUIBASE_USERNAME}
-    password: ${DB_LIQUIBASE_PASSWORD}
+    # Ajoutez une valeur par défaut pour DB_NAME et assurez-vous que les credentials sont passés
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:yowyob}
+    user: ${DB_LIQUIBASE_USERNAME:${DB_USERNAME}} # Utilise DB_USERNAME par défaut si spécifique absent
+    password: ${DB_LIQUIBASE_PASSWORD:${DB_PASSWORD}}
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
     default-schema: public
@@ -50,7 +51,7 @@ spring:
   # KAFKA — Connexion sécurisée
   # ------------------------------------------------------------------
   kafka:
-    bootstrap-servers: ${KAFKA_HOST}:${KAFKA_PORT:29092}
+    bootstrap-servers: ${KAFKA_HOST:localhost}:${KAFKA_PORT:29092}
 
     # ── Authentification SASL/SCRAM-SHA-256 ────────────────────────
     properties:
