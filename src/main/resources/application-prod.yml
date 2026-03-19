@@ -2,16 +2,24 @@
 # PRODUCTION CONFIGURATION - NOTIFICATION API
 # ===================================================================
 
+server:
+  port: 8080
+  forward-headers-strategy: framework
+  error:
+    include-message: always
+
 spring:
   # ------------------------------------------------------------------
   # DATABASE — Liquibase (JDBC)
   # ------------------------------------------------------------------
   liquibase:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME}
-    user: ${DB_LIQUIBASE_USERNAME:${DB_USERNAME}}
-    password: ${DB_LIQUIBASE_PASSWORD:${DB_PASSWORD}}
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME:yowyob}
+    user: ${DB_LIQUIBASE_USERNAME}
+    password: ${DB_LIQUIBASE_PASSWORD}
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
+    default-schema: public
+    liquibase-schema: public
 
   # ------------------------------------------------------------------
   # DATABASE — Datasource JDBC (Requis pour que Spring instancie Liquibase)
@@ -35,27 +43,52 @@ spring:
       max-size: 20 # Plus large en prod
       max-idle-time: 30m
 
+  sql:
+    init:
+      mode: never
   # ------------------------------------------------------------------
   # KAFKA — Connexion sécurisée
   # ------------------------------------------------------------------
   kafka:
-    bootstrap-servers: ${KAFKA_HOST}:${KAFKA_PORT:9092}
+    bootstrap-servers: ${KAFKA_HOST}:${KAFKA_PORT:29092}
+
+    # ── Authentification SASL/SCRAM-SHA-256 ────────────────────────
+    properties:
+      security.protocol: SASL_PLAINTEXT
+      sasl.mechanism: SCRAM-SHA-256
+      sasl.jaas.config: >
+        org.apache.kafka.common.security.scram.ScramLoginModule required
+        username="${KAFKA_BACKEND_USER}"
+        password="${KAFKA_BACKEND_PASSWORD}";
+
     consumer:
       group-id: yowyob.notification-group
       auto-offset-reset: earliest
       enable-auto-commit: false # Plus fiable pour les notifications
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      max-poll-records: 50
       properties:
         spring.json.trusted.packages: "notification.service.yowyob.inc.*"
+
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       acks: all
       properties:
         enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+        compression.type: lz4
 
-# Monitoring
+    # ── Listener container ──────────────────────────────────────────
+    listener:
+      ack-mode: MANUAL_IMMEDIATE
+      concurrency: 3
+      missing-topics-fatal: false
+
+# ------------------------------------------------------------------
+# MONITORING & HEALTH CHECK (ACTUATOR)
+# ------------------------------------------------------------------
 management:
   endpoints:
     web:
@@ -64,3 +97,9 @@ management:
   endpoint:
     health:
       show-details: "always"
+      probes:
+        enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
