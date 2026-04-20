@@ -5,13 +5,18 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.servers.Server;
 
-import java.util.Arrays;
+import java.util.List; 
 
+import org.springframework.beans.factory.annotation.Value; 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class OpenApiConfig {
+
+  // Injection de l'URL avec la variable d'environnement
+  @Value("${app.swagger.server-url}")
+  private String serverUrl;
 
   @Bean
   public OpenAPI customOpenAPI() {
@@ -21,9 +26,9 @@ public class OpenApiConfig {
             .version("v1.0")
             .description("API for managing notifications, services, and templates.")
             .license(new License().name("Apache 2.0").url("http://springdoc.org")))
-        .servers(Arrays.asList(
-            new Server().url("https://notification-service.pynfi.com"),
-            new Server().url("http://localhost:8080")));
-
+        .servers(List.of(
+            new Server().url(serverUrl).description("Serveur de Production / Proxy"),
+            new Server().url("http://localhost:8080").description("Serveur Local")
+        ));
   }
 }

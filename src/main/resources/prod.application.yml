@@ -8,6 +8,11 @@ server:
   error:
     include-message: always
 
+# Config Swagger
+app:
+  swagger:
+    server-url: ${NOTIFICATION_SERVER_URL:https://traefikdev.yowyob.com/notification}
+
 spring:
   # ------------------------------------------------------------------
   # DATABASE — Liquibase (JDBC)
